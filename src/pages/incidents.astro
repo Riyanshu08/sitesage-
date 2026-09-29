@@ -7,16 +7,16 @@
 import Layout from '../layouts/Layout.astro';
 
 const incidents = [
-  { id:'INC-0248', type:'No Hard Hat',          severity:'critical', cam:'CAM-04', sector:'B', location:'Crane Zone',    time:'14:43:17', timeDisplay:'02:43 PM', worker:'TRACK-024', confidence:98, status:'open',          assignee:null,      aiState:'ai-detected' },
-  { id:'INC-0247', type:'Restricted Zone Breach',severity:'critical', cam:'CAM-03', sector:'B', location:'Sector B Entry',time:'14:38:44', timeDisplay:'02:38 PM', worker:'TRACK-019', confidence:94, status:'investigating',  assignee:'J. Reyes',aiState:'ai-detected' },
-  { id:'INC-0246', type:'No Safety Vest',        severity:'high',     cam:'CAM-01', sector:'A', location:'Level 08',      time:'14:31:05', timeDisplay:'02:31 PM', worker:'TRACK-011', confidence:91, status:'open',          assignee:null,      aiState:'ai-detected' },
-  { id:'INC-0245', type:'Proximity Alert',        severity:'high',     cam:'CAM-04', sector:'B', location:'Crane Swing',   time:'14:28:30', timeDisplay:'02:28 PM', worker:'TRACK-033', confidence:88, status:'acknowledged',  assignee:'R. Santos',aiState:'ai-detected' },
-  { id:'INC-0244', type:'No Gloves',              severity:'medium',   cam:'CAM-04', sector:'B', location:'Material Handling',time:'14:15:22',timeDisplay:'02:15 PM',worker:'TRACK-027',confidence:96, status:'resolved',      assignee:'M. Chen', aiState:'confirmed' },
-  { id:'INC-0243', type:'Unauthorized Entry',     severity:'critical', cam:'CAM-05', sector:'C', location:'Gate C',        time:'14:07:55', timeDisplay:'02:07 PM', worker:'UNKNOWN',   confidence:97, status:'resolved',      assignee:'J. Reyes',aiState:'false-positive' },
-  { id:'INC-0242', type:'Low Visibility Zone',    severity:'medium',   cam:'CAM-03', sector:'C', location:'Sector C',      time:'13:55:10', timeDisplay:'01:55 PM', worker:'N/A',       confidence:85, status:'resolved',      assignee:'M. Chen', aiState:'confirmed' },
-  { id:'INC-0241', type:'No Hard Hat',            severity:'critical', cam:'CAM-04', sector:'B', location:'Crane Zone',    time:'13:42:08', timeDisplay:'01:42 PM', worker:'TRACK-089', confidence:99, status:'resolved',      assignee:'J. Reyes',aiState:'confirmed' },
-  { id:'INC-0240', type:'Emergency Stop Breach',  severity:'critical', cam:'CAM-01', sector:'A', location:'Level 12',      time:'13:30:44', timeDisplay:'01:30 PM', worker:'TRACK-034', confidence:93, status:'resolved',      assignee:'R. Santos',aiState:'confirmed' },
-  { id:'INC-0239', type:'PPE Degradation',        severity:'medium',   cam:'CAM-02', sector:'A', location:'Level 08',      time:'13:15:22', timeDisplay:'01:15 PM', worker:'TRACK-156', confidence:87, status:'resolved',      assignee:'M. Chen', aiState:'confirmed' },
+  { id:'INC-0248', type:'No Hard Hat Detected',     severity:'critical', cam:'CAM-04', sector:'B', location:'Crane Staging 4B', time:'14:43:17', timeDisplay:'02:43 PM', worker:'Marcus "Mack" Vance', badge:'#SC-4891', trade:'Ironworker • SteelCorp', confidence:98, status:'open',          assignee:'Sarah Chen, CSP', aiState:'ai-detected' },
+  { id:'INC-0247', type:'Restricted Zone Breach',   severity:'critical', cam:'CAM-03', sector:'B', location:'Crane Swing Radius',time:'14:38:44', timeDisplay:'02:38 PM', worker:'Jorge "Kiko" Reyes',  badge:'#MC-1102', trade:'Crane Rigger • Metro',    confidence:94, status:'investigating',  assignee:'Dan Vance, PE',   aiState:'ai-detected' },
+  { id:'INC-0246', type:'No Safety Vest (Class 2)', severity:'high',     cam:'CAM-01', sector:'A', location:'Level 08 Deck',     time:'14:31:05', timeDisplay:'02:31 PM', worker:'Elena Rostova-Chen',  badge:'#AC-0924', trade:'Lead Finisher • Apex',     confidence:91, status:'resolved',       assignee:'Ray Kowalski',    aiState:'confirmed' },
+  { id:'INC-0245', type:'Equipment Buffer Breach',  severity:'high',     cam:'CAM-06', sector:'D', location:'Loading Bay East',   time:'14:28:30', timeDisplay:'02:28 PM', worker:'Darnell Washington', badge:'#HE-3011', trade:'Electrician • HighRise',   confidence:88, status:'acknowledged',   assignee:'R. Santos',       aiState:'confirmed' },
+  { id:'INC-0244', type:'No Gloves Handling Rebar', severity:'medium',   cam:'CAM-04', sector:'B', location:'Grid 4B Rebar Pile',time:'14:15:22', timeDisplay:'02:15 PM', worker:'Tomás Rivera',        badge:'#AC-0881', trade:'Scaffolder • Apex',       confidence:96, status:'resolved',       assignee:'Frank Delgado',   aiState:'confirmed' },
+  { id:'INC-0243', type:'Unauthorized Gate Ingress',severity:'critical', cam:'CAM-05', sector:'C', location:'Gate C Entry',       time:'14:07:55', timeDisplay:'02:07 PM', worker:'E. Rostova (Auditor)',badge:'#GOV-882', trade:'External OSHA Auditor',  confidence:97, status:'resolved',       assignee:'Sarah Chen, CSP', aiState:'false-positive' },
+  { id:'INC-0242', type:'Low Visibility Zone',      severity:'medium',   cam:'CAM-03', sector:'C', location:'Core Shaft West',    time:'13:55:10', timeDisplay:'01:55 PM', worker:'Dave Callahan',       badge:'#SC-4902', trade:'Rigger • SteelCorp',       confidence:85, status:'resolved',       assignee:'Frank Delgado',   aiState:'confirmed' },
+  { id:'INC-0241', type:'No Hard Hat (Restored)',   severity:'critical', cam:'CAM-04', sector:'B', location:'Sector B Laydown',   time:'13:42:08', timeDisplay:'01:42 PM', worker:'Ray Kowalski',        badge:'#AC-0012', trade:'Pour Foreman • Apex',      confidence:99, status:'resolved',       assignee:'Dan Vance, PE',   aiState:'confirmed' },
+  { id:'INC-0240', type:'Fall Arrest Tether Unhitched',severity:'critical',cam:'CAM-01',sector:'A', location:'Level 12 Deck Edge',time:'13:30:44', timeDisplay:'01:30 PM', worker:'Marcus Vance',        badge:'#SC-4891', trade:'Ironworker • SteelCorp',   confidence:93, status:'resolved',       assignee:'Sarah Chen, CSP', aiState:'confirmed' },
+  { id:'INC-0239', type:'Torn High-Vis Vest Striping',severity:'medium',cam:'CAM-02', sector:'A', location:'Level 08 Scaffolding',time:'13:15:22',timeDisplay:'01:15 PM', worker:'Elena Chen',           badge:'#AC-0924', trade:'Lead Finisher • Apex',     confidence:87, status:'resolved',       assignee:'Ray Kowalski',    aiState:'confirmed' },
 ];
 
 const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
@@ -130,6 +130,7 @@ const aiStateColor = (s: string) =>
             { key:'id',         label:'Incident ID' },
             { key:'severity',   label:'Severity' },
             { key:'type',       label:'Detection' },
+            { key:'worker',     label:'Tradesperson & Subcontractor' },
             { key:'location',   label:'Location' },
             { key:'cam',        label:'Camera' },
             { key:'timeDisplay',label:'Time' },
@@ -181,6 +182,12 @@ const aiStateColor = (s: string) =>
             <!-- Detection type -->
             <td>
               <span style="font-size:var(--text-sm);font-weight:var(--weight-medium);">{inc.type}</span>
+            </td>
+
+            <!-- Tradesperson & Subcontractor -->
+            <td>
+              <div style="font-size:var(--text-xs);font-weight:var(--weight-semibold);color:var(--color-text-primary);">{inc.worker}</div>
+              <div style="font-size:10px;color:var(--color-primary);font-family:var(--font-mono);margin-top:1px;">{inc.trade}</div>
             </td>
 
             <!-- Location -->

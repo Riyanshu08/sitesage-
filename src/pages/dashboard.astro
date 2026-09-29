@@ -5,6 +5,11 @@
  * The primary operational screen — tri-pane: Live Feed + Alerts + Analytics
  */
 import Layout from '../layouts/Layout.astro';
+import HumanoidWorker from '../components/HumanoidWorker.astro';
+import RadioIntercomWidget from '../components/RadioIntercomWidget.astro';
+import ToolboxBriefingCard from '../components/ToolboxBriefingCard.astro';
+import WorkerProfileModal from '../components/WorkerProfileModal.astro';
+import { WORKERS } from '../data/mockData';
 ---
 
 <Layout
@@ -179,45 +184,83 @@ import Layout from '../layouts/Layout.astro';
             <text x="468" y="222" text-anchor="middle" font-family="monospace" font-size="7"
               fill="rgba(239,68,68,0.5)">CRANE SWING AREA</text>
 
-            <!-- Worker 1 — COMPLIANT (left side) -->
-            <circle cx="120" cy="200" r="18" fill="rgba(16,185,129,0.06)" stroke="#10B981" stroke-width="1.5"/>
-            <circle cx="120" cy="184" r="7" fill="#0d1c38" stroke="#10B981" stroke-width="1.2"/>
-            <rect  x="112" cy="195" width="16" height="22" rx="3" fill="#0d1c38" stroke="#10B981" stroke-width="1.2"/>
+            <!-- Humanoid Worker 1 — COMPLIANT (Elena Rostova-Chen, Apex Lead Finisher) -->
+            <HumanoidWorker
+              x={90}
+              y={160}
+              scale={1.05}
+              pose="standing-tablet"
+              hasHelmet={true}
+              helmetColor="#EAB308"
+              vestColor="lime"
+              workerName="Elena Rostova-Chen"
+              workerTrade="Apex Concrete Lead"
+              workerId="AC-0924"
+            />
 
-            <!-- Worker 2 — VIOLATION (inside geofence) -->
-            <circle cx="460" cy="195" r="20" fill="rgba(239,68,68,0.06)" stroke="#EF4444" stroke-width="2"/>
-            <circle cx="460" cy="178" r="8" fill="#0d1c38" stroke="#EF4444" stroke-width="1.5"/>
-            <rect   x="451" y="188" width="18" height="24" rx="3" fill="#0d1c38" stroke="#EF4444" stroke-width="1.5"/>
+            <!-- Humanoid Worker 2 — VIOLATION (Marcus 'Mack' Vance, SteelCorp Ironworker) -->
+            <HumanoidWorker
+              x={440}
+              y={150}
+              scale={1.12}
+              pose="walking-tool"
+              hasHelmet={false}
+              vestColor="orange"
+              isAlert={true}
+              workerName="Marcus 'Mack' Vance"
+              workerTrade="SteelCorp Ironworker"
+              workerId="SC-4891"
+            />
+
+            <!-- Humanoid Worker 3 — RIGGER IN BACKGROUND (Jorge Reyes, Metro Crane Rigger) -->
+            <HumanoidWorker
+              x={275}
+              y={200}
+              scale={0.72}
+              pose="rigging-signal"
+              hasHelmet={true}
+              helmetColor="#FFFFFF"
+              vestColor="lime"
+              workerName="Jorge Reyes"
+              workerTrade="Metro Crane Rigger"
+              workerId="MC-1102"
+            />
           </svg>
 
-          <!-- COMPLIANT WORKER bounding box -->
+          <!-- COMPLIANT WORKER bounding box (Elena Chen) -->
           <div class="bbox bbox-compliant"
-               style="left:13%;top:44%;width:8%;height:24%;"
-               role="img"
-               aria-label="Worker compliant — 96% confidence">
-            <div class="bbox-label bbox-label-compliant">WORKER · COMPLIANT · 96%</div>
+               style="left:12%;top:41%;width:11%;height:34%;cursor:pointer;"
+               role="button"
+               tabindex="0"
+               data-open-worker-modal="AC-0924"
+               title="Click to view Elena Chen's safety dossier"
+               aria-label="Worker Elena Chen (Apex) — Compliant (96% confidence). Click to view safety dossier.">
+            <div class="bbox-label bbox-label-compliant">Elena Chen (Apex) · PPE COMPLIANT · 96%</div>
           </div>
 
-          <!-- VIOLATION bounding box -->
+          <!-- VIOLATION bounding box (Marcus Vance) -->
           <div class="bbox bbox-critical"
-               style="left:61%;top:38%;width:9%;height:28%;"
+               style="left:63%;top:38%;width:12%;height:36%;cursor:pointer;"
                id="violation-bbox"
-               role="img"
-               aria-label="Safety violation — No Helmet — 98% confidence">
+               role="button"
+               tabindex="0"
+               data-open-worker-modal="SC-4891"
+               title="Click to inspect Marcus Vance's violation and dispatch radio"
+               aria-label="Safety violation: Marcus Vance (SteelCorp) — No Helmet (98% confidence). Click to open incident.">
             <div class="bbox-label bbox-label-critical">
               <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" style="display:inline;margin-right:2px;" aria-hidden="true">
                 <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
               </svg>
-              NO HELMET · AI · 98%
+              Marcus Vance (SteelCorp) · NO HELMET · 98%
             </div>
           </div>
 
-          <!-- Camera metadata overlay -->
+          <!-- Realistic CCTV On-Screen Display (OSD) -->
           <div class="cam-meta" aria-hidden="true">
-            <div>CAM-04 · SECTOR B</div>
-            <div data-live-clock>14:43:17 PM</div>
-            <div>REC ● 1080p · 30fps</div>
-            <div style="color:rgba(239,68,68,0.8);margin-top:2px;">⚠ SIMULATED DEMO FEED</div>
+            <div style="font-weight:700;letter-spacing:0.04em;color:#fff;">CAM-04 · SECTOR B (CRANE #2 RADIUS)</div>
+            <div data-live-clock style="color:var(--color-safe);">2026-09-29 14:43:17.84 EST</div>
+            <div>REC ● 4K (3840×2160) · 30.00 FPS · 8.4 Mbps · H.265</div>
+            <div style="color:rgba(255,255,255,0.45);font-size:7.5px;margin-top:1px;">AZ: 142.4° · EL: -18.2° · SENSOR: SONY STARVIS II · GAIN: +6dB</div>
           </div>
 
           <!-- Status top right -->
@@ -225,14 +268,14 @@ import Layout from '../layouts/Layout.astro';
             <span class="badge badge-live" style="font-size:9px;">● LIVE</span>
           </div>
 
-          <!-- AI detection indicator top right -->
+          <!-- Video sensor ingestion indicator top right -->
           <div style="
             position:absolute;bottom:50px;right:8px;
             font-family:var(--font-mono);font-size:8px;
             color:rgba(6,182,212,0.8);
-            background:rgba(0,0,0,0.5);padding:3px 6px;border-radius:3px;
+            background:rgba(0,0,0,0.55);padding:3px 6px;border-radius:3px;
           " aria-hidden="true">
-            AI PROCESSING · 28ms
+            STREAM INGESTION · 21ms JITTER
           </div>
 
           <!-- HUD corners -->
@@ -504,7 +547,12 @@ import Layout from '../layouts/Layout.astro';
           </div>
         </div>
       </div>
+    </div>
 
+    <!-- ── HUMAN FIELD COMMUNICATIONS & DAILY SAFETY TALK ── -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;">
+      <RadioIntercomWidget />
+      <ToolboxBriefingCard />
     </div>
   </div>
 
@@ -571,34 +619,37 @@ import Layout from '../layouts/Layout.astro';
       </div>
 
       <!-- Evidence snap -->
-      <div class="evidence-snap">
+      <div class="evidence-snap" style="position:relative;background:#060d1a;aspect-ratio:16/9;overflow:hidden;border-radius:4px;border:1px solid rgba(239,68,68,0.3);">
         <svg width="100%" height="100%" viewBox="0 0 240 135" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
           <rect width="240" height="135" fill="#060d1a"/>
-          <rect x="40" y="20" width="80" height="90" fill="#091528" stroke="#152238" stroke-width="0.5"/>
-          <circle cx="90" cy="60" r="14" fill="rgba(239,68,68,0.1)" stroke="#EF4444" stroke-width="1.5"/>
-          <rect x="82" y="72" width="16" height="22" rx="3" fill="#091528" stroke="#EF4444" stroke-width="1.5"/>
-          <text x="120" y="125" font-size="7" fill="rgba(6,182,212,0.6)" font-family="monospace">CAM-04 · SIMULATED DEMO</text>
+          <rect x="20" y="20" width="80" height="90" fill="#091528" stroke="#152238" stroke-width="0.5"/>
+          <!-- Humanoid Worker Marcus Vance (Missing Helmet, Orange Vest) -->
+          <HumanoidWorker x={85} y={12} scale={0.9} pose="walking-tool" hasHelmet={false} vestColor="orange" isAlert={true} />
+          <text x="12" y="125" font-size="7" fill="rgba(6,182,212,0.8)" font-family="monospace">CAM-04 · MARCUS VANCE (#SC-4891)</text>
         </svg>
         <div style="position:absolute;top:4px;right:4px;">
-          <span class="badge badge-critical" style="font-size:8px;">NO HELMET</span>
+          <span class="badge badge-critical" style="font-size:8px;">NO HELMET [98%]</span>
         </div>
       </div>
 
-      <div style="margin-top:8px;display:flex;gap:6px;">
-        <span style="font-family:var(--font-mono);font-size:var(--text-technical);color:var(--color-text-tertiary);">
-          TRACK-024 · AI DETECTED · AWAITING REVIEW
-        </span>
+      <div style="margin-top:8px;display:flex;flex-direction:column;gap:2px;">
+        <div style="font-size:11px;font-weight:600;color:var(--color-text-primary);">
+          Marcus "Mack" Vance · Local 40 Ironworker
+        </div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--color-primary);">
+          SteelCorp Heavy Erectors · Radio Ch 4 Dispatched
+        </div>
       </div>
     </div>
 
     <!-- Scrollable alert feed -->
     <div class="alert-scroll" role="feed" aria-label="Real-time alert feed" id="alert-feed">
       {[
-        { id:'INC-0247', sev:'critical', title:'Restricted Zone Breach',    cam:'CAM-03 · Crane Area', time:'2m ago',  conf:94 },
-        { id:'INC-0246', sev:'high',     title:'No Safety Vest',            cam:'CAM-01 · Level 08',  time:'5m ago',  conf:91 },
-        { id:'INC-0245', sev:'high',     title:'Proximity Alert — Crane',   cam:'CAM-04 · Crane Zone',time:'8m ago',  conf:88 },
-        { id:'INC-0244', sev:'safe',     title:'PPE Compliance Restored',   cam:'CAM-02 · Sector A',  time:'11m ago', conf:99 },
-        { id:'INC-0243', sev:'high',     title:'Unknown Personnel',         cam:'CAM-05 · Gate C',    time:'15m ago', conf:97 },
+        { id:'INC-0248', sev:'critical', title:'No Hard Hat Detected',     worker:'Marcus Vance', trade:'Ironworker', sub:'SteelCorp', cam:'CAM-04 · Crane Zone', time:'Just now', conf:98 },
+        { id:'INC-0247', sev:'critical', title:'Restricted Zone Breach',   worker:'Jorge Reyes', trade:'Crane Rigger', sub:'Metro Crane', cam:'CAM-03 · Main Gate', time:'2m ago',  conf:94 },
+        { id:'INC-0246', sev:'high',     title:'No Safety Vest (Class 2)', worker:'Elena Chen', trade:'Lead Finisher', sub:'Apex Concrete', cam:'CAM-01 · Level 08',  time:'5m ago',  conf:91 },
+        { id:'INC-0245', sev:'high',     title:'Vehicle Buffer Incursion',  worker:'Darnell Washington', trade:'Electrician', sub:'HighRise', cam:'CAM-06 · Loading Bay',time:'8m ago',  conf:88 },
+        { id:'INC-0244', sev:'safe',     title:'PPE Compliance Restored',  worker:'Elena Chen', trade:'Lead Finisher', sub:'Apex Concrete', cam:'CAM-02 · Level 12',  time:'11m ago', conf:99 },
       ].map(alert => (
         <div class={`alert-item ${alert.sev === 'critical' ? 'critical-item' : ''}`}
              role="article"
@@ -611,12 +662,13 @@ import Layout from '../layouts/Layout.astro';
              data-severity={alert.sev}
              data-timestamp={alert.time}
              tabindex="0"
-             aria-label={`${alert.sev === 'critical' ? 'Critical' : alert.sev === 'high' ? 'High priority' : 'Safe'} alert: ${alert.title}. ${alert.cam}. ${alert.time}.`}>
+             aria-label={`${alert.sev === 'critical' ? 'Critical' : alert.sev === 'high' ? 'High priority' : 'Safe'} alert: ${alert.title}. ${alert.worker} (${alert.sub}).`}>
           <span class={`status-dot ${alert.sev === 'safe' ? 'safe' : alert.sev === 'critical' ? 'critical' : 'warning'}`}
                 style="margin-top:4px;flex-shrink:0;" aria-hidden="true"></span>
           <div class="alert-item-body">
             <div class="alert-item-title">{alert.title}</div>
-            <div class="alert-item-meta">{alert.cam}</div>
+            <div style="font-size:10px;color:var(--color-primary);font-weight:600;">{alert.worker} ({alert.trade} • {alert.sub})</div>
+            <div class="alert-item-meta">{alert.cam} · {alert.time}</div>
           </div>
           <div style="text-align:right;flex-shrink:0;">
             <div class="tech-label">{alert.time}</div>
@@ -863,6 +915,94 @@ import Layout from '../layouts/Layout.astro';
       id: `INC-0${249 + alertCount}`,
     });
   };
+
+  // ── Worker Profile Modal Interactions ─────────────────────
+  const workerModal = document.getElementById('modal-worker-profile');
+  const workerAvatar = document.getElementById('worker-modal-avatar');
+  const workerNameEl = document.getElementById('worker-modal-name');
+  const workerBadgeEl = document.getElementById('worker-modal-badge');
+  const workerTradeEl = document.getElementById('worker-modal-trade');
+  const workerSubEl = document.getElementById('worker-modal-sub');
+  const workerForemanEl = document.getElementById('worker-modal-foreman');
+  const workerStreakEl = document.getElementById('worker-modal-streak');
+  const workerRatingEl = document.getElementById('worker-modal-rating');
+  const workerObsBox = document.getElementById('worker-modal-obs-box');
+
+  const workerDB: Record<string, any> = {
+    'SC-4891': {
+      name: 'Marcus "Mack" Vance',
+      badge: '#SC-4891',
+      avatar: 'MV',
+      trade: 'Journeyman Ironworker (Local 40)',
+      sub: 'SteelCorp Heavy Erectors',
+      foreman: 'Frank Delgado (Radio Ch 4)',
+      streak: '84 Consecutive Shifts',
+      rating: '94.2% Compliance',
+      obs: 'Field observation: Marcus set hard hat on gangbox to adjust crane tagline. Radio dispatched to Foreman Frank Delgado for on-site correction.',
+      hasAlert: true
+    },
+    'AC-0924': {
+      name: 'Elena Rostova-Chen',
+      badge: '#AC-0924',
+      avatar: 'EC',
+      trade: 'Lead Concrete Finisher',
+      sub: 'Apex Concrete Ltd.',
+      foreman: 'Ray Kowalski (Radio Ch 2)',
+      streak: '192 Consecutive Shifts',
+      rating: '99.1% Compliance',
+      obs: 'Full compliance verified on Level 08 deck. Safety harness tethered to static line.',
+      hasAlert: false
+    },
+    'MC-1102': {
+      name: 'Jorge "Kiko" Reyes',
+      badge: '#MC-1102',
+      avatar: 'JR',
+      trade: 'Certified Crane Rigger',
+      sub: 'Metro Crane Specialists',
+      foreman: 'Bill Henderson (Liebherr Operator)',
+      streak: '140 Consecutive Shifts',
+      rating: '96.5% Compliance',
+      obs: 'Outrigger pads placement verified. Operating within clear radius.',
+      hasAlert: false
+    }
+  };
+
+  function openWorkerProfile(wid: string) {
+    const data = workerDB[wid] || workerDB['SC-4891'];
+    if (!workerModal) return;
+    if (workerAvatar) workerAvatar.textContent = data.avatar;
+    if (workerNameEl) workerNameEl.textContent = data.name;
+    if (workerBadgeEl) workerBadgeEl.textContent = data.badge;
+    if (workerTradeEl) workerTradeEl.textContent = data.trade;
+    if (workerSubEl) workerSubEl.textContent = data.sub;
+    if (workerForemanEl) workerForemanEl.textContent = data.foreman;
+    if (workerStreakEl) workerStreakEl.textContent = data.streak;
+    if (workerRatingEl) workerRatingEl.textContent = data.rating;
+    if (workerObsBox) {
+      workerObsBox.style.display = data.hasAlert ? 'block' : 'none';
+      const textEl = workerObsBox.querySelector('div:last-child');
+      if (textEl) textEl.textContent = data.obs;
+    }
+    workerModal.style.display = 'flex';
+  }
+
+  document.querySelectorAll('[data-open-worker-modal]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const wid = el.getAttribute('data-open-worker-modal') || 'SC-4891';
+      openWorkerProfile(wid);
+    });
+  });
+
+  document.querySelectorAll('.humanoid-worker').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const wid = el.getAttribute('data-worker-id') || 'SC-4891';
+      openWorkerProfile(wid);
+    });
+  });
 </script>
+
+<WorkerProfileModal />
 
 </Layout>

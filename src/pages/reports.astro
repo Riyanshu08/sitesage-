@@ -5,6 +5,7 @@
  * OSHA 1926 audits, shift summaries, and forensic incident exports
  */
 import Layout from '../layouts/Layout.astro';
+import HumanoidWorker from '../components/HumanoidWorker.astro';
 
 const reportTemplates = [
   {
@@ -406,18 +407,72 @@ const subcontractorScores = [
       <div style="background:#060a12;border:1px solid var(--color-border);border-radius:var(--radius-sm);aspect-ratio:16/7;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;">
         <svg viewBox="0 0 600 250" style="position:absolute;inset:0;width:100%;height:100%;">
           <rect width="600" height="250" fill="#090f1d"/>
-          <!-- Grid lines -->
-          <line x1="50" y1="200" x2="550" y2="200" stroke="#1f293d" stroke-width="2"/>
-          <line x1="150" y1="50" x2="150" y2="200" stroke="#1f293d" stroke-width="3"/>
-          <line x1="450" y1="80" x2="450" y2="200" stroke="#1f293d" stroke-width="3"/>
-          <!-- Bounding box -->
-          <rect x="240" y="80" width="80" height="110" fill="none" stroke="#EF4444" stroke-width="2"/>
-          <rect x="240" y="62" width="130" height="18" fill="#EF4444"/>
-          <text x="245" y="75" fill="#FFFFFF" font-size="10" font-family="monospace" font-weight="bold">NO HARD HAT [91%]</text>
-          <text x="245" y="100" fill="#EF4444" font-size="9" font-family="monospace">CAM-04 CRANE ZONE</text>
+          
+          <!-- Industrial construction structural backdrop -->
+          <line x1="0" y1="205" x2="600" y2="205" stroke="#1f293d" stroke-width="2"/>
+          <line x1="120" y1="30" x2="120" y2="205" stroke="#1e293b" stroke-width="4"/>
+          <line x1="480" y1="40" x2="480" y2="205" stroke="#1e293b" stroke-width="4"/>
+          <line x1="120" y1="60" x2="480" y2="60" stroke="#152238" stroke-width="2"/>
+          <line x1="120" y1="120" x2="480" y2="120" stroke="#152238" stroke-width="1.5" stroke-dasharray="6,4"/>
+
+          <!-- Crane cable & hook block in background -->
+          <line x1="420" y1="0" x2="420" y2="110" stroke="#334155" stroke-width="1.5"/>
+          <polygon points="412,110 428,110 420,126" fill="#F59E0B"/>
+          <path d="M420,126 C415,134 425,142 420,146" fill="none" stroke="#F59E0B" stroke-width="2.5"/>
+
+          <!-- Compliant background worker: Jorge Reyes (Rigging Signalman) -->
+          <g opacity="0.85">
+            <HumanoidWorker
+              x={400}
+              y={85}
+              scale={0.95}
+              pose="rigging-signal"
+              hasHelmet={true}
+              helmetColor="#EAB308"
+              vestColor="lime"
+              isAlert={false}
+              workerName="Jorge 'Kiko' Reyes"
+              workerTrade="Master Rigging Specialist"
+              workerId="RIG-007"
+            />
+            <rect x="396" y="70" width="102" height="13" rx="2" fill="#10B981" opacity="0.9"/>
+            <text x="400" y="79" fill="#091528" font-size="7.5" font-family="monospace" font-weight="bold">J. REYES (RIGGER) · 98%</text>
+          </g>
+
+          <!-- Violation Worker: Marcus Vance (Ironworker, No Hard Hat) -->
+          <g>
+            <!-- AI Bounding Box -->
+            <rect x="220" y="72" width="88" height="132" fill="none" stroke="#EF4444" stroke-width="2"/>
+            <rect x="220" y="52" width="156" height="20" rx="2" fill="#EF4444"/>
+            <text x="225" y="66" fill="#FFFFFF" font-size="9" font-family="monospace" font-weight="bold">NO HARD HAT · M. VANCE [91%]</text>
+            
+            <HumanoidWorker
+              x={232}
+              y={76}
+              scale={1.05}
+              pose="walking-tool"
+              hasHelmet={false}
+              vestColor="orange"
+              isAlert={true}
+              workerName="Marcus 'Mack' Vance"
+              workerTrade="Journeyman Ironworker"
+              workerId="WORKER-024"
+            />
+
+            <!-- Subcontractor trade tag below worker -->
+            <rect x="220" y="206" width="138" height="15" rx="2" fill="#091528" stroke="#EF4444" stroke-width="1"/>
+            <text x="224" y="217" fill="#EF4444" font-size="7.5" font-family="monospace">STEELCORP ERECTORS #48</text>
+          </g>
         </svg>
-        <div style="position:absolute;bottom:8px;left:8px;font-family:var(--font-mono);font-size:9px;color:rgba(255,255,255,0.7);background:rgba(0,0,0,0.7);padding:2px 6px;border-radius:2px;">
-          INCIDENT REF: INC-0248 • RECORDED: 13:42:09 UTC
+
+        <!-- Authentic OSD Camera Telemetry -->
+        <div style="position:absolute;top:8px;left:8px;font-family:var(--font-mono);font-size:9px;color:rgba(255,255,255,0.75);background:rgba(0,0,0,0.7);padding:3px 8px;border-radius:2px;display:flex;gap:12px;">
+          <span>CAM-04 TOWER CRANE SWING</span>
+          <span style="color:var(--color-critical);">CRANE RADIUS BREACH</span>
+          <span>1080P @ 30FPS</span>
+        </div>
+        <div style="position:absolute;bottom:8px;left:8px;font-family:var(--font-mono);font-size:9px;color:rgba(255,255,255,0.85);background:rgba(0,0,0,0.8);padding:3px 8px;border-radius:2px;">
+          INCIDENT REF: INC-0248 • RECORDED: 13:42:09 UTC • TRADESPERSON: MARCUS VANCE (STEELCORP)
         </div>
       </div>
     </div>

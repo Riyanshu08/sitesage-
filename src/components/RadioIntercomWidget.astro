@@ -1,0 +1,168 @@
+---
+/**
+ * SiteSage — Jobsite Field Radio Intercom (Channel 04 - Safety)
+ * Provides authentic, human-to-human communications between Site Safety Superintendents,
+ * Subcontractor Foremen, and Heavy Crane Operators.
+ */
+import { RADIO_DISPATCH_LOG } from '../data/mockData';
+---
+
+<div class="card radio-widget" style="padding:14px;background:linear-gradient(175deg, #10192a 0%, #0a1120 100%);border:1px solid var(--color-border);display:flex;flex-direction:column;gap:12px;">
+  
+  <!-- Radio Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--color-border);padding-bottom:10px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <!-- Walkie Talkie Icon with animated transmission wave -->
+      <div style="width:32px;height:32px;border-radius:6px;background:rgba(37,99,235,0.15);border:1px solid rgba(59,130,246,0.4);display:flex;align-items:center;justify-content:center;color:var(--color-primary);position:relative;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="5" y="7" width="14" height="14" rx="3"/><line x1="9" y1="2" x2="9" y2="7"/><circle cx="12" cy="14" r="3"/>
+        </svg>
+        <span style="position:absolute;top:-2px;right:-2px;width:7px;height:7px;background:var(--color-safe);border-radius:50%;animation:pulse-radio 1.5s infinite;"></span>
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:12px;font-weight:700;color:var(--color-text-primary);letter-spacing:0.02em;">JOBSITE FIELD INTERCOM</span>
+          <span class="badge badge-primary" style="font-size:8px;font-family:var(--font-mono);">CH 04 • 462.5625 MHz</span>
+        </div>
+        <div style="font-size:10px;color:var(--color-text-tertiary);">Direct link: Safety Superintendents & Rigging Foremen</div>
+      </div>
+    </div>
+
+    <!-- Active Transmit Audio Indicator -->
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span class="badge badge-safe" style="font-size:9px;">MONITORING LIVE</span>
+    </div>
+  </div>
+
+  <!-- Radio Transcript Scroll Area -->
+  <div id="radio-transcript-box" style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;padding-right:4px;">
+    {RADIO_DISPATCH_LOG.map(msg => (
+      <div class="radio-msg-item" style={`padding:8px 10px;border-radius:var(--radius-sm);border:1px solid ${msg.type === 'critical' ? 'rgba(239,68,68,0.3)' : msg.type === 'action' ? 'rgba(59,130,246,0.3)' : 'var(--color-border)'};background:${msg.type === 'critical' ? 'rgba(239,68,68,0.06)' : msg.type === 'action' ? 'rgba(37,99,235,0.06)' : 'rgba(255,255,255,0.02)'};`}>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style={`font-family:var(--font-mono);font-size:9px;font-weight:700;color:${msg.type === 'critical' ? 'var(--color-critical)' : 'var(--color-primary)'};`}>
+              [{msg.timestamp}]
+            </span>
+            <span style="font-size:11px;font-weight:600;color:var(--color-text-primary);">
+              {msg.speaker}
+            </span>
+            <span style="font-size:9px;color:var(--color-text-tertiary);">
+              ({msg.role})
+            </span>
+          </div>
+          <span style="font-size:8px;color:var(--color-text-tertiary);font-family:var(--font-mono);">
+            {msg.channel.split(' ')[0]}
+          </span>
+        </div>
+        <div style="font-size:11px;color:var(--color-text-secondary);line-height:1.4;">
+          "{msg.text}"
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <!-- Push-to-Talk / Dispatch Controls -->
+  <div style="display:flex;align-items:center;gap:8px;padding-top:8px;border-top:1px solid var(--color-border);">
+    <div style="position:relative;flex:1;">
+      <input
+        type="text"
+        id="radio-quick-input"
+        class="input"
+        placeholder="Type broadcast to Foreman Delgado on Ch 4..."
+        style="height:32px;font-size:11px;padding-right:60px;"
+      />
+      <button
+        id="btn-radio-send"
+        class="btn btn-primary btn-sm"
+        style="position:absolute;right:2px;top:2px;height:28px;padding:0 8px;font-size:10px;"
+      >
+        Transmit
+      </button>
+    </div>
+
+    <!-- PTT Physical button simulation -->
+    <button
+      id="btn-ptt-talk"
+      class="btn btn-secondary btn-sm"
+      style="height:32px;gap:6px;font-size:11px;background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.3);color:var(--color-critical);"
+    >
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+      </svg>
+      Hold PTT (Radio)
+    </button>
+  </div>
+</div>
+
+<style>
+@keyframes pulse-radio {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.3); }
+}
+</style>
+
+<script>
+  const pttBtn = document.getElementById('btn-ptt-talk');
+  const sendBtn = document.getElementById('btn-radio-send');
+  const inputEl = document.getElementById('radio-quick-input') as HTMLInputElement;
+  const transcriptBox = document.getElementById('radio-transcript-box');
+
+  function addRadioMessage(speaker: string, role: string, text: string, type: 'critical' | 'action' | 'info') {
+    if (!transcriptBox) return;
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+    
+    const div = document.createElement('div');
+    div.className = 'radio-msg-item';
+    div.style.cssText = `padding:8px 10px;border-radius:var(--radius-sm);border:1px solid ${type === 'critical' ? 'rgba(239,68,68,0.3)' : 'rgba(59,130,246,0.3)'};background:${type === 'critical' ? 'rgba(239,68,68,0.06)' : 'rgba(37,99,235,0.06)'};animation:fadeIn 0.3s ease;`;
+    div.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-family:var(--font-mono);font-size:9px;font-weight:700;color:var(--color-primary);">[${timeStr}]</span>
+          <span style="font-size:11px;font-weight:600;color:var(--color-text-primary);">${speaker}</span>
+          <span style="font-size:9px;color:var(--color-text-tertiary);">(${role})</span>
+        </div>
+        <span style="font-size:8px;color:var(--color-text-tertiary);font-family:var(--font-mono);">CH 04</span>
+      </div>
+      <div style="font-size:11px;color:var(--color-text-secondary);line-height:1.4;">"${text}"</div>
+    `;
+    transcriptBox.appendChild(div);
+    transcriptBox.scrollTop = transcriptBox.scrollHeight;
+  }
+
+  sendBtn?.addEventListener('click', () => {
+    const val = inputEl?.value.trim();
+    if (!val) return;
+    addRadioMessage('Sarah Chen, CSP', 'Lead Safety Officer', val, 'action');
+    inputEl.value = '';
+
+    // Simulated human foreman reply after 2.5s
+    setTimeout(() => {
+      addRadioMessage('Frank Delgado', 'SteelCorp Foreman', 'Copy that Sarah, Delgado here. Handled on-site.', 'info');
+    }, 2500);
+  });
+
+  inputEl?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendBtn?.click();
+  });
+
+  pttBtn?.addEventListener('mousedown', () => {
+    pttBtn.style.background = 'var(--color-critical)';
+    pttBtn.style.color = '#fff';
+    pttBtn.textContent = '● Transmitting Voice...';
+  });
+
+  pttBtn?.addEventListener('mouseup', () => {
+    pttBtn.style.background = 'rgba(239,68,68,0.12)';
+    pttBtn.style.color = 'var(--color-critical)';
+    pttBtn.innerHTML = `
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+      </svg>
+      Hold PTT (Radio)
+    `;
+    addRadioMessage('Sarah Chen, CSP', 'Voice Dispatch (PTT)', 'Voice memo transmitted to Rigging Foreman Delgado on Channel 4.', 'action');
+  });
+</script>

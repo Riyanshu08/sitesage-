@@ -5,6 +5,8 @@
  * Interactive geofence designer + rule builder
  */
 import Layout from '../layouts/Layout.astro';
+import HumanoidWorker from '../components/HumanoidWorker.astro';
+import WorkerProfileModal from '../components/WorkerProfileModal.astro';
 
 const zones = [
   { id:'z-crane',    name:'Crane Swing Radius',  type:'Restricted',   camera:'CAM-04', severity:'critical', active:true,  workers:0, breaches:7,  color:'#EF4444' },
@@ -195,17 +197,54 @@ const zones = [
         <text x="130" y="330" text-anchor="middle" font-family="monospace" font-size="8" fill="rgba(59,130,246,0.5)">MATERIAL LAYDOWN</text>
         <text x="130" y="342" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(59,130,246,0.35)">INACTIVE</text>
 
-        <!-- Workers in scene -->
-        <!-- Worker in crane zone (VIOLATION) -->
-        <circle cx="390" cy="180" r="12" fill="rgba(239,68,68,0.08)" stroke="#EF4444" stroke-width="1.5"/>
-        <circle cx="390" cy="171" r="6" fill="#091528" stroke="#EF4444" stroke-width="1.2"/>
-        <rect x="382" y="179" width="16" height="20" rx="3" fill="#091528" stroke="#EF4444" stroke-width="1.2"/>
-        <text x="390" y="210" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(239,68,68,0.8)">TRACK-024</text>
+        <!-- Realistic articulated human tradespeople in scene -->
+        <!-- Worker 1: Marcus Vance in crane zone (Violations: Radius Breach & Hard Hat missing) -->
+        <g id="worker-marcus-zone" class="worker-interactive" data-open-worker-modal="WORKER-024" style="cursor:pointer;">
+          <!-- Bounding box with detection banner -->
+          <rect x="365" y="116" width="56" height="96" fill="none" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="4,2"/>
+          <rect x="365" y="103" width="94" height="14" rx="2" fill="#EF4444"/>
+          <text x="368" y="113" fill="#FFFFFF" font-size="7.5" font-family="monospace" font-weight="bold">MARCUS VANCE · 94%</text>
+          
+          <HumanoidWorker
+            x={372}
+            y={116}
+            scale={0.68}
+            pose="walking-tool"
+            hasHelmet={false}
+            vestColor="orange"
+            isAlert={true}
+            workerName="Marcus 'Mack' Vance"
+            workerTrade="Journeyman Ironworker"
+            workerId="WORKER-024"
+          />
 
-        <!-- Worker 2 (compliant) -->
-        <circle cx="150" cy="200" r="11" fill="rgba(16,185,129,0.08)" stroke="#10B981" stroke-width="1.2"/>
-        <circle cx="150" cy="192" r="5.5" fill="#091528" stroke="#10B981" stroke-width="1"/>
-        <rect x="143" y="199" width="14" height="18" rx="2" fill="#091528" stroke="#10B981" stroke-width="1"/>
+          <!-- Floating violation tag -->
+          <g transform="translate(355, 216)">
+            <rect x="0" y="0" width="118" height="15" rx="2" fill="#0D1527" stroke="#EF4444" stroke-width="1"/>
+            <text x="59" y="10.5" text-anchor="middle" font-family="monospace" font-size="7" fill="#EF4444" font-weight="bold">⚠ CRANE RADIUS BREACH</text>
+          </g>
+        </g>
+
+        <!-- Worker 2: Elena Chen (Site Engineer) in compliant PPE -->
+        <g id="worker-elena-zone" class="worker-interactive" data-open-worker-modal="ENG-012" style="cursor:pointer;">
+          <rect x="135" y="152" width="48" height="94" fill="none" stroke="#10B981" stroke-width="1.2" opacity="0.8"/>
+          <rect x="135" y="140" width="80" height="13" rx="2" fill="#10B981"/>
+          <text x="138" y="149" fill="#091528" font-size="7" font-family="monospace" font-weight="bold">ELENA CHEN (ENG)</text>
+          
+          <HumanoidWorker
+            x={138}
+            y={150}
+            scale={0.66}
+            pose="standing-tablet"
+            hasHelmet={true}
+            helmetColor="#FFFFFF"
+            vestColor="lime"
+            isAlert={false}
+            workerName="Elena Rostova-Chen"
+            workerTrade="Lead Site Engineer"
+            workerId="ENG-012"
+          />
+        </g>
 
         <!-- Drawing cursor indicator (shown in draw mode) -->
         <g id="draw-cursor" style="display:none;" aria-hidden="true">
@@ -488,5 +527,8 @@ const zones = [
     alert('Zone polygon saved! Assign a name and rules in the configuration panel, then click "Save Zone".');
   });
 </script>
+
+<!-- Worker Personnel Profile Dossier Modal -->
+<WorkerProfileModal />
 
 </Layout>

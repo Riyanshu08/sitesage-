@@ -1,0 +1,67 @@
+---
+/**
+ * SiteSage — Morning Toolbox Briefing Card
+ * Displays the daily 06:30 AM jobsite safety meeting signed by human trade foremen.
+ */
+import { TOOLBOX_BRIEFING } from '../data/mockData';
+---
+
+<div class="card toolbox-card" style="padding:14px;background:linear-gradient(175deg, #111a2e 0%, #0c1424 100%);border:1px solid var(--color-border);display:flex;flex-direction:column;gap:10px;">
+  
+  <!-- Header with OSHA / Toolbox Badge -->
+  <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--color-border);padding-bottom:8px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:28px;height:28px;border-radius:6px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);display:flex;align-items:center;justify-content:center;color:var(--color-safe);">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+        </svg>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--color-text-primary);">DAILY TOOLBOX SAFETY TALK</div>
+        <div style="font-size:10px;color:var(--color-text-tertiary);">{TOOLBOX_BRIEFING.date} • {TOOLBOX_BRIEFING.shift}</div>
+      </div>
+    </div>
+    <span class="badge badge-safe" style="font-size:9px;">100% ATTENDANCE ({TOOLBOX_BRIEFING.attendeesCount} SIGNED)</span>
+  </div>
+
+  <!-- Briefing Topic & Leads -->
+  <div>
+    <div style="font-size:11px;font-weight:600;color:var(--color-primary);margin-bottom:3px;">
+      {TOOLBOX_BRIEFING.topic}
+    </div>
+    <div style="font-size:10px;color:var(--color-text-secondary);display:flex;gap:12px;flex-wrap:wrap;">
+      <span>Meeting Conducted by: <strong>{TOOLBOX_BRIEFING.lead}</strong></span>
+      <span>Weather: <strong style="color:var(--color-text-primary);">{TOOLBOX_BRIEFING.weather}</strong></span>
+    </div>
+  </div>
+
+  <!-- Key Jobsite Hazards Identified Today -->
+  <div style="background:rgba(0,0,0,0.25);border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:8px 10px;">
+    <div style="font-size:9px;font-weight:700;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;">
+      Today's Critical Hazards & Wind Restrictions
+    </div>
+    <ul style="margin:0;padding-left:14px;font-size:10px;color:var(--color-text-secondary);line-height:1.4;">
+      {TOOLBOX_BRIEFING.keyHazards.map(hazard => (
+        <li style="margin-bottom:2px;">{hazard}</li>
+      ))}
+    </ul>
+  </div>
+
+  <!-- Signed Off Footer -->
+  <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--color-text-tertiary);padding-top:6px;border-top:1px solid rgba(255,255,255,0.04);">
+    <div style="display:flex;align-items:center;gap:4px;">
+      <span style="color:var(--color-safe);font-weight:700;">✓ DIGITALLY SIGNED:</span>
+      <span>{TOOLBOX_BRIEFING.supervisorSignOff} ({TOOLBOX_BRIEFING.signOffTime})</span>
+    </div>
+    <button class="btn btn-ghost btn-sm" id="btn-view-sign-sheet" style="font-size:10px;padding:2px 8px;height:24px;">
+      Roster Sheet
+    </button>
+  </div>
+
+</div>
+
+<script>
+  document.getElementById('btn-view-sign-sheet')?.addEventListener('click', () => {
+    alert('Toolbox Talk Roster Sheet #142:\nAll 48 tradespeople signed in at gangbox 4B (06:30 AM EST).\nVerified by Sarah Chen, CSP.');
+  });
+</script>
