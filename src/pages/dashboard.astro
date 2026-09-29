@@ -1,0 +1,868 @@
+---
+/**
+ * SiteSage — Command Center Dashboard
+ * Route: /dashboard
+ * The primary operational screen — tri-pane: Live Feed + Alerts + Analytics
+ */
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="Dashboard"
+  breadcrumb={['Site Dashboard', 'Command Center']}
+  activePage="dashboard"
+>
+
+<!-- ── OPERATIONAL STATUS STRIP ───────────────────────── -->
+<div class="ops-status-strip" role="status" aria-label="Site operational status">
+  <div class="ops-status-item">
+    <span class="status-dot safe" aria-hidden="true"></span>
+    <div>
+      <div class="ops-status-label">Site Status</div>
+      <div class="ops-status-value safe" id="site-status-val">Operational</div>
+    </div>
+  </div>
+  <div class="ops-status-item">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary-hover)" stroke-width="2" aria-hidden="true"><path d="M23 7 16 12 23 17V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+    <div>
+      <div class="ops-status-label">Cameras</div>
+      <div class="ops-status-value primary" id="cameras-val">22 / 24 Online</div>
+    </div>
+  </div>
+  <div class="ops-status-item">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-warning)" stroke-width="2" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <div>
+      <div class="ops-status-label">Active Risks</div>
+      <div class="ops-status-value warning" id="risks-val">7</div>
+    </div>
+  </div>
+  <div class="ops-status-item">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-critical)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <div>
+      <div class="ops-status-label">Critical</div>
+      <div class="ops-status-value critical" id="critical-val">2</div>
+    </div>
+  </div>
+  <div class="ops-status-item">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-safe)" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+    <div>
+      <div class="ops-status-label">Compliance</div>
+      <div class="ops-status-value safe" id="compliance-val">94.2%</div>
+    </div>
+  </div>
+  <div class="ops-status-item">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-secondary)" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <div>
+      <div class="ops-status-label">Workers On-Site</div>
+      <div class="ops-status-value" id="workers-val">142</div>
+    </div>
+  </div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:10px;">
+    <div style="font-family:var(--font-mono);font-size:var(--text-xxs);color:var(--color-text-tertiary);">
+      Last sync: <span data-live-clock style="color:var(--color-cyan);">--:--:-- --</span>
+    </div>
+    <span class="badge badge-live" aria-label="Live monitoring active">● LIVE</span>
+  </div>
+</div>
+
+<!-- ── TRI-PANE LAYOUT ────────────────────────────────── -->
+<div class="tri-pane" id="tri-pane">
+
+  <!-- ═══════════════════════════════════════════════
+       LEFT + BOTTOM: CAMERA FEED + ANALYTICS
+  ═══════════════════════════════════════════════ -->
+  <div class="tri-left">
+
+    <!-- CAMERA PANEL -->
+    <div class="card" id="camera-panel" style="display:flex;flex-direction:column;min-height:0;">
+      <div class="panel-header" style="gap:6px;">
+        <!-- Camera selector -->
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="status-dot live" aria-hidden="true"></span>
+          <span class="panel-title" id="camera-panel-title">CAM-04 — Sector B · Crane Zone</span>
+        </div>
+
+        <div class="panel-actions">
+          <!-- Camera selector dropdown -->
+          <select
+            id="camera-select"
+            class="input"
+            style="width:auto;padding:4px 8px;font-size:var(--text-xxs);font-family:var(--font-mono);height:28px;cursor:pointer;"
+            aria-label="Select camera feed"
+          >
+            <option value="CAM-04">CAM-04 — Crane Zone</option>
+            <option value="CAM-01">CAM-01 — Level 08</option>
+            <option value="CAM-02">CAM-02 — Level 12</option>
+            <option value="CAM-03">CAM-03 — Sector B Entry</option>
+            <option value="CAM-05">CAM-05 — South Gate</option>
+          </select>
+
+          <!-- View mode toggle -->
+          <div role="group" aria-label="View mode" style="display:flex;border:1px solid var(--color-border);border-radius:6px;overflow:hidden;">
+            <button id="view-single" class="view-toggle-btn active" aria-pressed="true" aria-label="Single camera view" title="Single view">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            </button>
+            <button id="view-grid" class="view-toggle-btn" aria-pressed="false" aria-label="2x2 camera grid" title="Grid view">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+            </button>
+          </div>
+
+          <button class="btn-icon" title="Fullscreen" aria-label="Toggle fullscreen" id="fullscreen-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── SINGLE CAMERA VIEW ── -->
+      <div id="single-view" class="cam-viewport" style="flex:1;border-radius:0;">
+        <div class="cam-scene" style="min-height:340px;">
+          <!-- Scan line -->
+          <div class="scan-line" aria-hidden="true"></div>
+
+          <!-- Simulated construction scene SVG -->
+          <svg width="100%" height="100%" viewBox="0 0 680 382" preserveAspectRatio="xMidYMid slice"
+               style="position:absolute;inset:0;" aria-hidden="true">
+            <!-- Sky -->
+            <defs>
+              <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stop-color="#030810"/>
+                <stop offset="100%" stop-color="#060d1a"/>
+              </linearGradient>
+              <linearGradient id="ground-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stop-color="#0a1220"/>
+                <stop offset="100%" stop-color="#060d1a"/>
+              </linearGradient>
+              <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                <line x1="0" y1="3" x2="6" y2="3" stroke="rgba(239,68,68,0.25)" stroke-width="1"/>
+              </pattern>
+            </defs>
+            <rect width="680" height="382" fill="url(#sky)"/>
+
+            <!-- Grid reference -->
+            {[0,1,2,3,4,5].map(i => (
+              <line x1={0} y1={60*i+20} x2={680} y2={60*i+20} stroke="rgba(255,255,255,0.02)" stroke-width="1"/>
+            ))}
+
+            <!-- Building skeleton left -->
+            <rect x="30" y="60" width="200" height="280" fill="rgba(9,21,40,0.9)" stroke="#152238" stroke-width="1"/>
+            {[100,140,180,220,260,300].map(y => (
+              <line x1="30" y1={y} x2="230" y2={y} stroke="#152238" stroke-width="0.5"/>
+            ))}
+            {[80,130,180].map(x => (
+              <line x1={x} y1="60" x2={x} y2="340" stroke="#152238" stroke-width="0.5"/>
+            ))}
+
+            <!-- Scaffolding mid-right -->
+            <rect x="420" y="100" width="200" height="220" fill="rgba(7,15,30,0.9)" stroke="#152238" stroke-width="1"/>
+            {[140,180,220,260,300].map(y => (
+              <line x1="420" y1={y} x2="620" y2={y} stroke="#152238" stroke-width="0.5"/>
+            ))}
+
+            <!-- Crane -->
+            <rect x="320" y="20" width="6" height="320" fill="#0d1c38"/>
+            <rect x="320" y="30" width="140" height="4" fill="#0d1c38"/>
+            <line x1="460" y1="34" x2="326" y2="200" stroke="#152238" stroke-width="0.5" stroke-dasharray="4,3"/>
+
+            <!-- Ground / base -->
+            <rect x="0" y="340" width="680" height="42" fill="url(#ground-grad)"/>
+
+            <!-- Equipment silhouettes -->
+            <rect x="240" y="270" width="80" height="50" rx="4" fill="#0a1625"/>
+            <rect x="250" y="250" width="20" height="30" rx="2" fill="#0a1625"/>
+
+            <!-- GEOFENCE ZONE (danger area) -->
+            <polygon points="380,120 560,110 570,290 370,300"
+              fill="url(#hatch)"
+              stroke="#EF4444" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.7"/>
+            <text x="468" y="210" text-anchor="middle" font-family="monospace" font-size="8"
+              fill="rgba(239,68,68,0.7)" letter-spacing="0.05em">RESTRICTED ZONE</text>
+            <text x="468" y="222" text-anchor="middle" font-family="monospace" font-size="7"
+              fill="rgba(239,68,68,0.5)">CRANE SWING AREA</text>
+
+            <!-- Worker 1 — COMPLIANT (left side) -->
+            <circle cx="120" cy="200" r="18" fill="rgba(16,185,129,0.06)" stroke="#10B981" stroke-width="1.5"/>
+            <circle cx="120" cy="184" r="7" fill="#0d1c38" stroke="#10B981" stroke-width="1.2"/>
+            <rect  x="112" cy="195" width="16" height="22" rx="3" fill="#0d1c38" stroke="#10B981" stroke-width="1.2"/>
+
+            <!-- Worker 2 — VIOLATION (inside geofence) -->
+            <circle cx="460" cy="195" r="20" fill="rgba(239,68,68,0.06)" stroke="#EF4444" stroke-width="2"/>
+            <circle cx="460" cy="178" r="8" fill="#0d1c38" stroke="#EF4444" stroke-width="1.5"/>
+            <rect   x="451" y="188" width="18" height="24" rx="3" fill="#0d1c38" stroke="#EF4444" stroke-width="1.5"/>
+          </svg>
+
+          <!-- COMPLIANT WORKER bounding box -->
+          <div class="bbox bbox-compliant"
+               style="left:13%;top:44%;width:8%;height:24%;"
+               role="img"
+               aria-label="Worker compliant — 96% confidence">
+            <div class="bbox-label bbox-label-compliant">WORKER · COMPLIANT · 96%</div>
+          </div>
+
+          <!-- VIOLATION bounding box -->
+          <div class="bbox bbox-critical"
+               style="left:61%;top:38%;width:9%;height:28%;"
+               id="violation-bbox"
+               role="img"
+               aria-label="Safety violation — No Helmet — 98% confidence">
+            <div class="bbox-label bbox-label-critical">
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" style="display:inline;margin-right:2px;" aria-hidden="true">
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              </svg>
+              NO HELMET · AI · 98%
+            </div>
+          </div>
+
+          <!-- Camera metadata overlay -->
+          <div class="cam-meta" aria-hidden="true">
+            <div>CAM-04 · SECTOR B</div>
+            <div data-live-clock>14:43:17 PM</div>
+            <div>REC ● 1080p · 30fps</div>
+            <div style="color:rgba(239,68,68,0.8);margin-top:2px;">⚠ SIMULATED DEMO FEED</div>
+          </div>
+
+          <!-- Status top right -->
+          <div class="cam-status-overlay" aria-hidden="true">
+            <span class="badge badge-live" style="font-size:9px;">● LIVE</span>
+          </div>
+
+          <!-- AI detection indicator top right -->
+          <div style="
+            position:absolute;bottom:50px;right:8px;
+            font-family:var(--font-mono);font-size:8px;
+            color:rgba(6,182,212,0.8);
+            background:rgba(0,0,0,0.5);padding:3px 6px;border-radius:3px;
+          " aria-hidden="true">
+            AI PROCESSING · 28ms
+          </div>
+
+          <!-- HUD corners -->
+          <div class="hud-corner hud-tl" aria-hidden="true"></div>
+          <div class="hud-corner hud-tr" aria-hidden="true"></div>
+          <div class="hud-corner hud-bl" aria-hidden="true"></div>
+          <div class="hud-corner hud-br" aria-hidden="true"></div>
+        </div>
+
+        <!-- Video controls -->
+        <div class="video-controls" aria-label="Video controls">
+          <!-- Play/Pause -->
+          <button class="btn-icon" id="play-pause-btn" aria-label="Pause live feed">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" id="play-icon" aria-hidden="true">
+              <rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>
+            </svg>
+          </button>
+
+          <!-- Timeline -->
+          <div class="timeline-bar" role="slider" aria-label="Timeline" aria-valuemin="0" aria-valuemax="100" aria-valuenow="65" id="timeline-bar">
+            <div class="timeline-progress" id="timeline-progress" style="width:65%;">
+              <div class="timeline-thumb" id="timeline-thumb" aria-hidden="true"></div>
+            </div>
+            <!-- Incident markers -->
+            <div style="position:absolute;left:40%;top:-4px;width:2px;height:10px;background:var(--color-critical);border-radius:1px;cursor:pointer;"
+                 title="INC-0248 · 14:43:17" role="button" tabindex="0" aria-label="Incident at 14:43:17"></div>
+            <div style="position:absolute;left:25%;top:-4px;width:2px;height:10px;background:var(--color-warning);border-radius:1px;cursor:pointer;"
+                 title="INC-0247 · 14:38:44" role="button" tabindex="0" aria-label="Incident at 14:38:44"></div>
+          </div>
+
+          <div class="time-display" aria-label="Current time in feed">
+            <span id="current-time">00:32</span> / LIVE
+          </div>
+
+          <!-- Resolution -->
+          <span style="font-family:var(--font-mono);font-size:9px;color:var(--color-text-tertiary);">1080p</span>
+
+          <!-- Volume -->
+          <button class="btn-icon btn-sm" aria-label="Mute audio">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── MULTI-CAMERA GRID VIEW (hidden by default) ── -->
+      <div id="grid-view" style="display:none;" aria-hidden="true">
+        <div class="cam-grid-2x2">
+          {[
+            { id:'CAM-01', name:'North Tower · L08',   status:'safe',     compliance:97 },
+            { id:'CAM-02', name:'North Tower · L12',   status:'warning',  compliance:94 },
+            { id:'CAM-03', name:'Sector B · Entry',    status:'critical', compliance:88 },
+            { id:'CAM-04', name:'Sector B · Crane Zone',status:'critical', compliance:81 },
+          ].map(cam => (
+            <div class="cam-grid-cell" data-cam={cam.id}
+                 role="button" tabindex="0"
+                 aria-label={`${cam.id} — ${cam.name}. Click to switch to this feed.`}
+                 data-open-drawer={cam.status === 'critical' ? '' : undefined}
+                 data-detection={cam.status === 'critical' ? 'No Hard Hat Detected' : undefined}
+                 data-camera={cam.id}
+                 data-location={cam.name}
+                 data-confidence={cam.status === 'critical' ? '98' : undefined}
+                 data-severity={cam.status}>
+              <!-- Mini scene -->
+              <svg width="100%" height="100%" viewBox="0 0 280 157" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                <rect width="280" height="157" fill="#060d1a"/>
+                {[0,1,2,3].map(i => <line x1={70*i} y1="0" x2={70*i} y2="157" stroke="#0d1c38" stroke-width="0.5"/>)}
+                {[0,1].map(i => <line x1="0" y1={60*i+40} x2="280" y2={60*i+40} stroke="#0d1c38" stroke-width="0.5"/>)}
+                <rect x="40" y="20" width="100" height="110" fill="#091528" stroke="#152238" stroke-width="0.5"/>
+                {cam.status === 'critical' && (
+                  <>
+                    <circle cx="90" cy="70" r="12" fill="rgba(239,68,68,0.1)" stroke="#EF4444" stroke-width="1.5"/>
+                    <text x="90" y="74" text-anchor="middle" font-size="7" fill="#EF4444">!</text>
+                  </>
+                )}
+                {cam.status === 'safe' && (
+                  <circle cx="90" cy="70" r="12" fill="rgba(16,185,129,0.1)" stroke="#10B981" stroke-width="1.5"/>
+                )}
+                {cam.status === 'warning' && (
+                  <circle cx="90" cy="70" r="12" fill="rgba(245,158,11,0.1)" stroke="#F59E0B" stroke-width="1.5"/>
+                )}
+              </svg>
+
+              <!-- Camera label -->
+              <div class="cam-cell-label">{cam.id}</div>
+
+              <!-- Status indicator -->
+              <div style={`position:absolute;top:5px;right:5px;`}>
+                <span class={`badge badge-${cam.status === 'safe' ? 'safe' : cam.status === 'critical' ? 'critical' : 'warning'}`}
+                      style="font-size:8px;padding:1px 5px;">
+                  {cam.status === 'safe' ? '✓' : cam.status === 'critical' ? '!' : '⚠'}
+                  {cam.compliance}%
+                </span>
+              </div>
+
+              <div class="cam-grid-overlay" aria-hidden="true"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS DECK -->
+    <div class="analytics-grid" id="analytics-deck">
+
+      <!-- Compliance trend chart -->
+      <div class="card">
+        <div class="panel-header">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-safe)" stroke-width="2" aria-hidden="true">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          <span class="panel-title">Safety Compliance</span>
+          <div class="panel-actions">
+            <span class="kpi-chip kpi-safe" style="font-size:var(--text-technical);">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="18 15 12 9 6 15"/></svg>
+              94.2%
+            </span>
+          </div>
+        </div>
+        <div class="chart-area" aria-label="Safety compliance trend chart">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            {['M','T','W','T','F','S','S'].map((d,i) => (
+              <span style="font-size:9px;color:var(--color-text-tertiary);text-align:center;flex:1;">{d}</span>
+            ))}
+          </div>
+          <svg width="100%" height="80" viewBox="0 0 200 80" preserveAspectRatio="none" role="img" aria-label="Weekly compliance trend">
+            <defs>
+              <linearGradient id="compliance-fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stop-color="rgba(16,185,129,0.2)"/>
+                <stop offset="100%" stop-color="rgba(16,185,129,0)"/>
+              </linearGradient>
+            </defs>
+            <!-- Data: [88, 91, 87, 93, 94, 92, 94] → mapped 0-80 → inverted -->
+            <polyline
+              points="0,50 28,42 57,53 85,36 114,30 142,38 171,30 200,30"
+              fill="none" stroke="var(--color-safe)" stroke-width="1.8" stroke-linejoin="round"/>
+            <polygon
+              points="0,50 28,42 57,53 85,36 114,30 142,38 171,30 200,30 200,80 0,80"
+              fill="url(#compliance-fill)"/>
+            <!-- Target line -->
+            <line x1="0" y1="20" x2="200" y2="20" stroke="rgba(16,185,129,0.2)" stroke-width="1" stroke-dasharray="3,3"/>
+            <!-- Hover dots -->
+            {[{x:0,y:50},{x:28,y:42},{x:57,y:53},{x:85,y:36},{x:114,y:30},{x:142,y:38},{x:171,y:30},{x:200,y:30}].map(p => (
+              <circle cx={p.x} cy={p.y} r="3" fill="var(--color-safe)" opacity="0.5"/>
+            ))}
+          </svg>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
+            <span class="tech-label">7-day avg: 91.3%</span>
+            <span class="tech-label">Target: 95%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Incident distribution bar chart -->
+      <div class="card">
+        <div class="panel-header">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-warning)" stroke-width="2" aria-hidden="true">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6"  y1="20" x2="6"  y2="14"/>
+          </svg>
+          <span class="panel-title">Incident Distribution</span>
+          <div class="panel-actions">
+            <span class="kpi-chip kpi-critical">7 Open</span>
+          </div>
+        </div>
+        <div class="chart-area" role="img" aria-label="Incident type distribution chart">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            {[
+              { label:'No Helmet',    count:13, pct:34, color:'var(--color-critical)' },
+              { label:'No Vest',      count:10, pct:26, color:'var(--color-critical)' },
+              { label:'Zone Breach',  count: 8, pct:21, color:'var(--color-warning)' },
+              { label:'No Gloves',    count: 5, pct:13, color:'var(--color-warning)' },
+              { label:'Other',        count: 2, pct: 5, color:'var(--color-text-tertiary)' },
+            ].map(item => (
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                  <span style="font-size:var(--text-xxs);color:var(--color-text-secondary);">{item.label}</span>
+                  <span style={`font-size:var(--text-xxs);font-weight:var(--weight-bold);color:${item.color};`}>{item.count}</span>
+                </div>
+                <div style="height:5px;background:var(--color-border);border-radius:var(--radius-full);overflow:hidden;">
+                  <div style={`height:100%;width:${item.pct}%;background:${item.color};border-radius:var(--radius-full);`}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <!-- Tactical radar -->
+      <div class="card">
+        <div class="panel-header">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-cyan)" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>
+          </svg>
+          <span class="panel-title">Tactical Radar</span>
+          <div class="panel-actions">
+            <span class="badge badge-critical" style="font-size:9px;">7 Targets</span>
+          </div>
+        </div>
+        <div class="radar-wrap" aria-label="Tactical radar showing 7 active targets across site sectors">
+          <div class="radar-svg-wrap">
+            <svg width="190" height="190" viewBox="0 0 190 190" role="img" aria-label="Radar scope">
+              <!-- Range rings -->
+              {[78,56,34,16].map(r => (
+                <circle cx="95" cy="95" r={r} fill="none" stroke="rgba(6,182,212,0.12)" stroke-width="1"/>
+              ))}
+
+              <!-- Crosshair -->
+              <line x1="95" y1="20" x2="95" y2="170" stroke="rgba(6,182,212,0.08)" stroke-width="0.5"/>
+              <line x1="20" y1="95" x2="170" y2="95" stroke="rgba(6,182,212,0.08)" stroke-width="0.5"/>
+              <line x1="40" y1="40" x2="150" y2="150" stroke="rgba(6,182,212,0.05)" stroke-width="0.5"/>
+              <line x1="150" y1="40" x2="40" y2="150" stroke="rgba(6,182,212,0.05)" stroke-width="0.5"/>
+
+              <!-- Sector dividers (4 quadrants labelled) -->
+              <text x="95" y="16"  text-anchor="middle" font-size="6" fill="rgba(6,182,212,0.4)" font-family="monospace">N TOWER</text>
+              <text x="178" y="98" text-anchor="end"    font-size="6" fill="rgba(6,182,212,0.4)" font-family="monospace">SECTOR B</text>
+              <text x="95" y="183" text-anchor="middle" font-size="6" fill="rgba(6,182,212,0.4)" font-family="monospace">GATE / YARD</text>
+              <text x="14" y="98"  text-anchor="start"  font-size="6" fill="rgba(6,182,212,0.4)" font-family="monospace">S TOWER</text>
+
+              <!-- Sweep gradient fill -->
+              <defs>
+                <radialGradient id="sweep-grad" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%"   stop-color="rgba(6,182,212,0.0)"/>
+                  <stop offset="80%"  stop-color="rgba(6,182,212,0.07)"/>
+                  <stop offset="100%" stop-color="rgba(6,182,212,0.0)"/>
+                </radialGradient>
+              </defs>
+
+              <!-- Sweep arm group -->
+              <g class="radar-sweep-arm" aria-hidden="true">
+                <line x1="95" y1="95" x2="95" y2="20" stroke="rgba(6,182,212,0.6)" stroke-width="1.5" stroke-linecap="round"/>
+                <!-- Sweep arc fill -->
+                <path d="M 95 95 L 95 20 A 75 75 0 0 1 160 65 Z"
+                      fill="url(#sweep-grad)" opacity="0.5"/>
+              </g>
+
+              <!-- Targets — CRITICAL (red) -->
+              <circle cx="130" cy="68" r="4.5" fill="var(--color-critical)" opacity="0.85" style="animation:blip-pulse 2s ease-in-out infinite;"/>
+              <circle cx="118" cy="80" r="3" fill="var(--color-critical)" opacity="0.7" style="animation:blip-pulse 2.4s ease-in-out infinite 0.3s;"/>
+
+              <!-- Targets — WARNING (amber) -->
+              <circle cx="70"  cy="50" r="3.5" fill="var(--color-warning)" opacity="0.8" style="animation:blip-pulse 1.8s ease-in-out infinite;"/>
+              <circle cx="55"  cy="80" r="3" fill="var(--color-warning)" opacity="0.7" style="animation:blip-pulse 2.2s ease-in-out infinite 0.5s;"/>
+
+              <!-- Targets — SAFE (green) -->
+              <circle cx="75"  cy="120" r="3" fill="var(--color-safe)" opacity="0.6"/>
+              <circle cx="110" cy="130" r="3.5" fill="var(--color-safe)" opacity="0.6"/>
+              <circle cx="95"  cy="115" r="2.5" fill="var(--color-safe)" opacity="0.5"/>
+
+              <!-- Center dot -->
+              <circle cx="95" cy="95" r="3" fill="var(--color-cyan)" opacity="0.8"/>
+            </svg>
+          </div>
+
+          <!-- Radar legend -->
+          <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+            {[
+              { color:'var(--color-critical)', label:'Critical (2)' },
+              { color:'var(--color-warning)',  label:'Warning (2)' },
+              { color:'var(--color-safe)',     label:'Safe (3)' },
+            ].map(l => (
+              <div style="display:flex;align-items:center;gap:4px;">
+                <span style={`width:8px;height:8px;border-radius:50%;background:${l.color};flex-shrink:0;`} aria-hidden="true"></span>
+                <span style="font-size:9px;color:var(--color-text-tertiary);">{l.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       RIGHT: REAL-TIME ALERTS RAIL
+  ═══════════════════════════════════════════════ -->
+  <div class="card alert-rail" id="alert-rail" style="overflow:hidden;">
+    <div class="panel-header" style="padding-bottom:8px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-critical)" stroke-width="2" aria-hidden="true">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      <span class="panel-title">Real-Time Alerts</span>
+      <div class="panel-actions">
+        <span class="badge badge-critical" id="live-alert-count">7</span>
+        <button class="btn-icon" aria-label="Filter alerts" title="Filter">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter pills -->
+    <div style="padding:6px 8px;border-bottom:1px solid var(--color-border);display:flex;gap:4px;">
+      <button class="filter-pill active" data-filter="all" aria-pressed="true">All</button>
+      <button class="filter-pill" data-filter="critical" aria-pressed="false">Critical</button>
+      <button class="filter-pill" data-filter="warning" aria-pressed="false">Warning</button>
+      <button class="filter-pill" data-filter="safe" aria-pressed="false">Safe</button>
+    </div>
+
+    <!-- Pinned hero critical alert -->
+    <div class="alert-hero"
+         data-open-drawer
+         data-incident-id="INC-0248"
+         data-detection="No Hard Hat Detected"
+         data-camera="CAM-04"
+         data-location="Sector B — Crane Zone"
+         data-confidence="98"
+         data-timestamp="14:43:17"
+         data-severity="critical"
+         role="button"
+         tabindex="0"
+         aria-label="Critical incident: No Hard Hat Detected. Open incident investigation."
+         style="margin:6px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+            <span class="badge badge-critical" style="font-size:9px;">
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+              CRITICAL
+            </span>
+            <span class="badge badge-neutral" style="font-size:9px;font-family:var(--font-mono);">INC-0248</span>
+          </div>
+          <div style="font-size:0.875rem;font-weight:var(--weight-bold);color:var(--color-text-primary);line-height:1.3;">
+            No Hard Hat Detected
+          </div>
+          <div style="font-size:var(--text-xxs);color:var(--color-text-tertiary);margin-top:2px;">
+            CAM-04 · Sector B — Crane Zone
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div class="tech-label">14:43:17</div>
+          <div style="font-size:var(--text-xxs);color:var(--color-critical);font-weight:var(--weight-bold);margin-top:2px;">AI · 98%</div>
+        </div>
+      </div>
+
+      <!-- Evidence snap -->
+      <div class="evidence-snap">
+        <svg width="100%" height="100%" viewBox="0 0 240 135" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <rect width="240" height="135" fill="#060d1a"/>
+          <rect x="40" y="20" width="80" height="90" fill="#091528" stroke="#152238" stroke-width="0.5"/>
+          <circle cx="90" cy="60" r="14" fill="rgba(239,68,68,0.1)" stroke="#EF4444" stroke-width="1.5"/>
+          <rect x="82" y="72" width="16" height="22" rx="3" fill="#091528" stroke="#EF4444" stroke-width="1.5"/>
+          <text x="120" y="125" font-size="7" fill="rgba(6,182,212,0.6)" font-family="monospace">CAM-04 · SIMULATED DEMO</text>
+        </svg>
+        <div style="position:absolute;top:4px;right:4px;">
+          <span class="badge badge-critical" style="font-size:8px;">NO HELMET</span>
+        </div>
+      </div>
+
+      <div style="margin-top:8px;display:flex;gap:6px;">
+        <span style="font-family:var(--font-mono);font-size:var(--text-technical);color:var(--color-text-tertiary);">
+          TRACK-024 · AI DETECTED · AWAITING REVIEW
+        </span>
+      </div>
+    </div>
+
+    <!-- Scrollable alert feed -->
+    <div class="alert-scroll" role="feed" aria-label="Real-time alert feed" id="alert-feed">
+      {[
+        { id:'INC-0247', sev:'critical', title:'Restricted Zone Breach',    cam:'CAM-03 · Crane Area', time:'2m ago',  conf:94 },
+        { id:'INC-0246', sev:'high',     title:'No Safety Vest',            cam:'CAM-01 · Level 08',  time:'5m ago',  conf:91 },
+        { id:'INC-0245', sev:'high',     title:'Proximity Alert — Crane',   cam:'CAM-04 · Crane Zone',time:'8m ago',  conf:88 },
+        { id:'INC-0244', sev:'safe',     title:'PPE Compliance Restored',   cam:'CAM-02 · Sector A',  time:'11m ago', conf:99 },
+        { id:'INC-0243', sev:'high',     title:'Unknown Personnel',         cam:'CAM-05 · Gate C',    time:'15m ago', conf:97 },
+      ].map(alert => (
+        <div class={`alert-item ${alert.sev === 'critical' ? 'critical-item' : ''}`}
+             role="article"
+             data-open-drawer
+             data-incident-id={alert.id}
+             data-detection={alert.title}
+             data-camera={alert.cam.split('·')[0].trim()}
+             data-location={alert.cam.split('·')[1]?.trim() ?? ''}
+             data-confidence={String(alert.conf)}
+             data-severity={alert.sev}
+             data-timestamp={alert.time}
+             tabindex="0"
+             aria-label={`${alert.sev === 'critical' ? 'Critical' : alert.sev === 'high' ? 'High priority' : 'Safe'} alert: ${alert.title}. ${alert.cam}. ${alert.time}.`}>
+          <span class={`status-dot ${alert.sev === 'safe' ? 'safe' : alert.sev === 'critical' ? 'critical' : 'warning'}`}
+                style="margin-top:4px;flex-shrink:0;" aria-hidden="true"></span>
+          <div class="alert-item-body">
+            <div class="alert-item-title">{alert.title}</div>
+            <div class="alert-item-meta">{alert.cam}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div class="tech-label">{alert.time}</div>
+            <div style={`font-size:9px;font-weight:var(--weight-bold);color:${alert.sev === 'safe' ? 'var(--color-safe)' : alert.sev === 'critical' ? 'var(--color-critical)' : 'var(--color-warning)'};margin-top:1px;`}>
+              {alert.conf}%
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <!-- View all link -->
+    <div style="padding:8px;border-top:1px solid var(--color-border);">
+      <a href="/incidents" class="btn btn-ghost" style="width:100%;justify-content:center;font-size:var(--text-xs);">
+        View all incidents
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- STYLES specific to this page -->
+<style>
+  .tri-pane {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    grid-template-areas: "left right";
+    gap: 16px;
+    flex: 1;
+  }
+  .tri-left {
+    grid-area: left;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 0;
+  }
+  #alert-rail {
+    grid-area: right;
+    height: calc(100vh - var(--header-height) - 24px * 2 - 54px - 16px);
+    position: sticky;
+    top: 16px;
+  }
+  .analytics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 220px;
+    gap: 16px;
+  }
+  .view-toggle-btn {
+    width: 30px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+    transition: background var(--duration-fast), color var(--duration-fast);
+    border: none;
+  }
+  .view-toggle-btn:hover  { background: var(--color-surface-2); color: var(--color-text-primary); }
+  .view-toggle-btn.active { background: var(--color-primary-bg); color: var(--color-primary-hover); }
+
+  @keyframes blip-pulse {
+    0%, 100% { opacity: 0.4; r: 3; }
+    50%       { opacity: 1;   }
+  }
+
+  @media (max-width: 1200px) {
+    .analytics-grid { grid-template-columns: 1fr 1fr; }
+    .analytics-grid > *:last-child { grid-column: 1 / -1; }
+  }
+  @media (max-width: 900px) {
+    .tri-pane {
+      grid-template-columns: 1fr;
+      grid-template-areas: "left" "right";
+    }
+    #alert-rail {
+      height: auto;
+      position: static;
+    }
+    .analytics-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+  // ── View toggle (single / grid) ────────────────────────
+  const singleView   = document.getElementById('single-view')!;
+  const gridView     = document.getElementById('grid-view')!;
+  const btnSingle    = document.getElementById('view-single')!;
+  const btnGrid      = document.getElementById('view-grid')!;
+
+  function showSingle() {
+    singleView.style.display = '';
+    singleView.removeAttribute('aria-hidden');
+    gridView.style.display   = 'none';
+    gridView.setAttribute('aria-hidden', 'true');
+    btnSingle.classList.add('active');
+    btnSingle.setAttribute('aria-pressed', 'true');
+    btnGrid.classList.remove('active');
+    btnGrid.setAttribute('aria-pressed', 'false');
+  }
+  function showGrid() {
+    gridView.style.display   = '';
+    gridView.removeAttribute('aria-hidden');
+    singleView.style.display = 'none';
+    singleView.setAttribute('aria-hidden', 'true');
+    btnGrid.classList.add('active');
+    btnGrid.setAttribute('aria-pressed', 'true');
+    btnSingle.classList.remove('active');
+    btnSingle.setAttribute('aria-pressed', 'false');
+  }
+  btnSingle.addEventListener('click', showSingle);
+  btnGrid.addEventListener('click', showGrid);
+
+  // ── Timeline progress ──────────────────────────────────
+  let progress = 65;
+  const progressBar = document.getElementById('timeline-progress')!;
+  const playPauseBtn = document.getElementById('play-pause-btn')!;
+  let playing = true;
+  let playInterval: ReturnType<typeof setInterval> | null = null;
+
+  function startPlay() {
+    playInterval = setInterval(() => {
+      progress = Math.min(progress + 0.2, 98);
+      if (progressBar) progressBar.style.width = progress + '%';
+    }, 500);
+  }
+  function stopPlay() {
+    if (playInterval) clearInterval(playInterval);
+    playInterval = null;
+  }
+  startPlay();
+
+  playPauseBtn.addEventListener('click', () => {
+    playing = !playing;
+    const icon = playPauseBtn.querySelector('#play-icon')!;
+    if (playing) {
+      playPauseBtn.setAttribute('aria-label', 'Pause live feed');
+      icon.innerHTML = `<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>`;
+      startPlay();
+    } else {
+      playPauseBtn.setAttribute('aria-label', 'Resume live feed');
+      icon.innerHTML = `<polygon points="5 3 19 12 5 21 5 3"/>`;
+      stopPlay();
+    }
+  });
+
+  // ── Filter pills ───────────────────────────────────────
+  document.querySelectorAll('.filter-pill').forEach(pill => {
+    pill.addEventListener('click', (e) => {
+      document.querySelectorAll('.filter-pill').forEach(p => {
+        p.classList.remove('active');
+        p.setAttribute('aria-pressed', 'false');
+      });
+      (pill as HTMLElement).classList.add('active');
+      pill.setAttribute('aria-pressed', 'true');
+    });
+  });
+
+  // ── Real-time event simulation ─────────────────────────
+  let alertCount = 7;
+  const alertCountEl = document.getElementById('live-alert-count')!;
+  const alertFeedEl  = document.getElementById('alert-feed')!;
+
+  function addAlert(event: {type:string;camera:string;location:string;detection:string;confidence:number;timestamp:string;severity:string;id:string}) {
+    const isCrit = event.severity === 'critical';
+    const color  = isCrit ? 'var(--color-critical)' : event.severity === 'high' ? 'var(--color-warning)' : 'var(--color-safe)';
+    const dotCls = isCrit ? 'critical' : event.severity === 'high' ? 'warning' : 'safe';
+
+    const el = document.createElement('div');
+    el.className = `alert-item${isCrit ? ' critical-item' : ''} new`;
+    el.setAttribute('role', 'article');
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('data-open-drawer', '');
+    el.setAttribute('data-incident-id', event.id);
+    el.setAttribute('data-detection', event.detection);
+    el.setAttribute('data-camera', event.camera);
+    el.setAttribute('data-location', event.location);
+    el.setAttribute('data-confidence', String(Math.round(event.confidence * 100)));
+    el.setAttribute('data-severity', event.severity);
+    el.setAttribute('data-timestamp', event.timestamp);
+    el.setAttribute('aria-label', `New ${event.severity} alert: ${event.detection}. ${event.camera}. ${event.timestamp}.`);
+    el.innerHTML = `
+      <span class="status-dot ${dotCls}" style="margin-top:4px;flex-shrink:0;" aria-hidden="true"></span>
+      <div class="alert-item-body">
+        <div class="alert-item-title">${event.detection}</div>
+        <div class="alert-item-meta">${event.camera} · ${event.location}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div class="tech-label">${event.timestamp}</div>
+        <div style="font-size:9px;font-weight:700;color:${color};margin-top:1px;">${Math.round(event.confidence*100)}%</div>
+      </div>
+    `;
+
+    // Insert at top of feed
+    alertFeedEl.insertBefore(el, alertFeedEl.firstChild);
+
+    // Remove oldest if too many
+    const allItems = alertFeedEl.querySelectorAll('.alert-item');
+    if (allItems.length > 8) allItems[allItems.length - 1]?.remove();
+
+    // Update counter
+    alertCount++;
+    if (alertCountEl) alertCountEl.textContent = String(alertCount);
+
+    // Flash violation bbox
+    const bbox = document.getElementById('violation-bbox');
+    if (bbox && isCrit) {
+      bbox.style.boxShadow = '0 0 20px var(--color-critical-glow)';
+      setTimeout(() => { bbox.style.boxShadow = ''; }, 2000);
+    }
+  }
+
+  // Register to receive simulation events
+  let simInterval: ReturnType<typeof setInterval> | null = null;
+
+  function scheduleNextEvent() {
+    const delay = 8000 + Math.random() * 12000;
+    simInterval = setTimeout(() => {
+      const events = [
+        { type:'critical_incident', camera:'CAM-04', cameraName:'Sector B — Crane Zone', location:'Sector B', detection:'No Hard Hat', confidence:0.98, severity:'critical' },
+        { type:'warning', camera:'CAM-03', cameraName:'Sector B — Entry', location:'Sector B', detection:'Zone Proximity Alert', confidence:0.91, severity:'high' },
+        { type:'critical_incident', camera:'CAM-01', cameraName:'North Tower — Level 08', location:'North Tower / L08', detection:'No Safety Vest', confidence:0.93, severity:'critical' },
+        { type:'warning', camera:'CAM-06', cameraName:'Loading Bay', location:'Loading Bay East', detection:'PPE Degradation', confidence:0.85, severity:'high' },
+      ];
+      const ev = events[Math.floor(Math.random() * events.length)];
+      const ts = new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+      const id = `INC-0${249 + alertCount}`;
+      addAlert({ ...ev, timestamp: ts, id });
+      scheduleNextEvent();
+    }, delay);
+  }
+
+  scheduleNextEvent();
+
+  // Hook into global demo button
+  (window as any).__sitesage_simulate_critical = () => {
+    const ts = new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    addAlert({
+      type: 'critical_incident', camera: 'CAM-04',
+      location: 'North Tower / Sector B', detection: 'No Hard Hat',
+      confidence: 0.98, timestamp: ts, severity: 'critical',
+      id: `INC-0${249 + alertCount}`,
+    });
+  };
+</script>
+
+</Layout>

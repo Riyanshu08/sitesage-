@@ -1,0 +1,870 @@
+---
+/**
+ * SiteSage — Camera Network Operations Center
+ * Route: /cameras
+ * RTSP stream management, camera health diagnostics & AI pipeline binding
+ */
+import Layout from '../layouts/Layout.astro';
+
+const cameras = [
+  {
+    id: 'CAM-01',
+    name: 'North Tower — Level 08 Deck',
+    sector: 'Sector A',
+    ip: '10.0.1.101',
+    url: 'rtsp://10.0.1.101:554/live/main',
+    model: 'Axis Q1656-LE 4K',
+    res: '4K (3840×2160)',
+    fps: 30,
+    bitrate: '8.4 Mbps',
+    codec: 'H.265 / HEVC',
+    latency: '18 ms',
+    packetLoss: '0.01%',
+    status: 'online',
+    health: 99,
+    uptime: '42d 18h',
+    aiPipelines: ['YOLOv8-PPE', 'ZoneBreach-A', 'WorkerCount'],
+    workers: 8,
+    activeThreats: 0,
+  },
+  {
+    id: 'CAM-02',
+    name: 'North Tower — Core Shaft Level 12',
+    sector: 'Sector A',
+    ip: '10.0.1.102',
+    url: 'rtsp://10.0.1.102:554/live/main',
+    model: 'Hanwha XNV-8080R',
+    res: '1080p (1920×1080)',
+    fps: 30,
+    bitrate: '4.2 Mbps',
+    codec: 'H.264',
+    latency: '22 ms',
+    packetLoss: '0.04%',
+    status: 'online',
+    health: 96,
+    uptime: '19d 04h',
+    aiPipelines: ['YOLOv8-PPE', 'TetherAnchor'],
+    workers: 12,
+    activeThreats: 2,
+  },
+  {
+    id: 'CAM-03',
+    name: 'Sector B — Main Staging Gate',
+    sector: 'Sector B',
+    ip: '10.0.1.103',
+    url: 'rtsp://10.0.1.103:554/live/main',
+    model: 'Bosch Dinion IP 7000',
+    res: '1080p (1920×1080)',
+    fps: 25,
+    bitrate: '3.8 Mbps',
+    codec: 'H.265',
+    latency: '24 ms',
+    packetLoss: '0.08%',
+    status: 'online',
+    health: 92,
+    uptime: '61d 11h',
+    aiPipelines: ['YOLOv8-PPE', 'VehiclePedestrian', 'LicensePlate'],
+    workers: 7,
+    activeThreats: 4,
+  },
+  {
+    id: 'CAM-04',
+    name: 'Sector B — Crane #2 Swing Radius',
+    sector: 'Sector B',
+    ip: '10.0.1.104',
+    url: 'rtsp://10.0.1.104:554/live/main',
+    model: 'Axis P3245-LVE 4K',
+    res: '4K (3840×2160)',
+    fps: 30,
+    bitrate: '9.1 Mbps',
+    codec: 'H.265',
+    latency: '19 ms',
+    packetLoss: '0.02%',
+    status: 'online',
+    health: 89,
+    uptime: '07d 14h',
+    aiPipelines: ['CraneGeofence', 'LoadSuspension', 'YOLOv8-PPE'],
+    workers: 4,
+    activeThreats: 7,
+  },
+  {
+    id: 'CAM-05',
+    name: 'South Tower — Gate C Access',
+    sector: 'Sector C',
+    ip: '10.0.1.105',
+    url: 'rtsp://10.0.1.105:554/live/main',
+    model: 'Hikvision DarkFighter 4K',
+    res: '720p (1280×720)',
+    fps: 15,
+    bitrate: '2.1 Mbps',
+    codec: 'H.264',
+    latency: '48 ms',
+    packetLoss: '0.35%',
+    status: 'online',
+    health: 88,
+    uptime: '14d 02h',
+    aiPipelines: ['BadgeRecognition', 'YOLOv8-PPE'],
+    workers: 6,
+    activeThreats: 1,
+  },
+  {
+    id: 'CAM-06',
+    name: 'East Wing — Heavy Loading Bay',
+    sector: 'Sector D',
+    ip: '10.0.1.106',
+    url: 'rtsp://10.0.1.106:554/live/main',
+    model: 'Dahua WizMind PTZ',
+    res: '1080p (1920×1080)',
+    fps: 12,
+    bitrate: '1.4 Mbps',
+    codec: 'H.264',
+    latency: '115 ms',
+    packetLoss: '4.82%',
+    status: 'warning',
+    health: 64,
+    uptime: '01d 22h',
+    aiPipelines: ['ForkliftProximity', 'YOLOv8-PPE'],
+    workers: 9,
+    activeThreats: 3,
+  },
+  {
+    id: 'CAM-07',
+    name: 'Sector D — Material Yard Storage',
+    sector: 'Sector D',
+    ip: '10.0.1.107',
+    url: 'rtsp://10.0.1.107:554/live/main',
+    model: 'Axis Q1656 Thermal',
+    res: '1080p (1920×1080)',
+    fps: 0,
+    bitrate: '0.0 Mbps',
+    codec: 'Offline',
+    latency: 'Timeout',
+    packetLoss: '100%',
+    status: 'offline',
+    health: 0,
+    uptime: '0d 00h',
+    aiPipelines: ['ThermalHazmat', 'IntrusionPerimeter'],
+    workers: 0,
+    activeThreats: 0,
+  },
+  {
+    id: 'CAM-08',
+    name: 'South Perimeter Fence — East Boundary',
+    sector: 'Sector E',
+    ip: '10.0.1.108',
+    url: 'rtsp://10.0.1.108:554/live/main',
+    model: 'Hanwha Techwin PTZ 4K',
+    res: '4K (3840×2160)',
+    fps: 30,
+    bitrate: '8.8 Mbps',
+    codec: 'H.265 / HEVC',
+    latency: '16 ms',
+    packetLoss: '0.01%',
+    status: 'online',
+    health: 99,
+    uptime: '94d 06h',
+    aiPipelines: ['PerimeterTripwire', 'IR-NightVision'],
+    workers: 2,
+    activeThreats: 0,
+  },
+  {
+    id: 'CAM-09',
+    name: 'Excavation Pit — Trench B-2',
+    sector: 'Sector B',
+    ip: '10.0.1.109',
+    url: 'rtsp://10.0.1.109:554/live/main',
+    model: 'Bosch Flexidome IP 5000',
+    res: '1080p (1920×1080)',
+    fps: 14,
+    bitrate: '1.9 Mbps',
+    codec: 'H.264',
+    latency: '92 ms',
+    packetLoss: '3.12%',
+    status: 'warning',
+    health: 68,
+    uptime: '04d 18h',
+    aiPipelines: ['ShoringCollapseWatch', 'YOLOv8-PPE'],
+    workers: 5,
+    activeThreats: 1,
+  },
+  {
+    id: 'CAM-10',
+    name: 'Electrical Substation Perimeter',
+    sector: 'Sector E',
+    ip: '10.0.1.110',
+    url: 'rtsp://10.0.1.110:554/live/main',
+    model: 'Axis M3075-V Compact',
+    res: '1080p (1920×1080)',
+    fps: 0,
+    bitrate: '0.0 Mbps',
+    codec: 'Offline',
+    latency: 'Host Unreachable',
+    packetLoss: '100%',
+    status: 'offline',
+    health: 0,
+    uptime: '0d 00h',
+    aiPipelines: ['HighVoltageArcWatch'],
+    workers: 0,
+    activeThreats: 0,
+  }
+];
+
+const onlineCount = cameras.filter(c => c.status === 'online').length;
+const warningCount = cameras.filter(c => c.status === 'warning').length;
+const offlineCount = cameras.filter(c => c.status === 'offline').length;
+---
+
+<Layout
+  title="Camera Network"
+  breadcrumb={['Site Dashboard', 'Camera Network']}
+  activePage="cameras"
+>
+
+<!-- TOP BANNER -->
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Camera Network & Telemetry</h1>
+    <p class="page-subtitle">27 RTSP edge nodes • AI vision pipelines • Real-time frame health & latency</p>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-ghost btn-sm" id="btn-refresh-all">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>
+      Ping Network
+    </button>
+    <button class="btn btn-primary btn-sm" id="btn-add-camera">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Register Camera
+    </button>
+  </div>
+</div>
+
+<!-- OPS STATUS METRIC STRIP -->
+<div class="ops-status-strip" role="region" aria-label="Network Telemetry Summary">
+  <div class="ops-status-item">
+    <span class="status-dot safe" aria-hidden="true"></span>
+    <div>
+      <div class="ops-status-label">Online Streams</div>
+      <div class="ops-status-value" style="color:var(--color-safe);">{onlineCount} <span style="font-size:11px;color:var(--color-text-tertiary);font-weight:400;">/ {cameras.length} nodes</span></div>
+    </div>
+  </div>
+  <div class="ops-status-item">
+    <span class="status-dot warning" aria-hidden="true"></span>
+    <div>
+      <div class="ops-status-label">Degraded Latency</div>
+      <div class="ops-status-value" style="color:var(--color-warning);">{warningCount} Streams</div>
+    </div>
+  </div>
+  <div class="ops-status-item">
+    <span class="status-dot critical" aria-hidden="true"></span>
+    <div>
+      <div class="ops-status-label">Offline Feeds</div>
+      <div class="ops-status-value" style="color:var(--color-critical);">{offlineCount} Nodes</div>
+    </div>
+  </div>
+  <div class="ops-status-item">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" aria-hidden="true">
+      <path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>
+    </svg>
+    <div>
+      <div class="ops-status-label">Aggregate Bandwidth</div>
+      <div class="ops-status-value">842.6 Mbps</div>
+    </div>
+  </div>
+  <div class="ops-status-item">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-safe)" stroke-width="2" aria-hidden="true">
+      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+    </svg>
+    <div>
+      <div class="ops-status-label">Edge Ingestion Ping</div>
+      <div class="ops-status-value" style="color:var(--color-safe);">21 ms avg</div>
+    </div>
+  </div>
+  <div class="ops-status-item" style="border-right:none;">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2" aria-hidden="true">
+      <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+    </svg>
+    <div>
+      <div class="ops-status-label">TensorRT GPU Load</div>
+      <div class="ops-status-value">68% • 42 FPS</div>
+    </div>
+  </div>
+</div>
+
+<!-- FILTER & VIEW CONTROLS -->
+<div class="card" style="padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+  <!-- Filter Pills -->
+  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+    <button class="filter-tab active" data-filter="all">All Cameras ({cameras.length})</button>
+    <button class="filter-tab" data-filter="online">Online ({onlineCount})</button>
+    <button class="filter-tab" data-filter="warning">Degraded ({warningCount})</button>
+    <button class="filter-tab" data-filter="offline">Offline ({offlineCount})</button>
+    <span style="color:var(--color-border);margin:0 4px;">|</span>
+    <select class="input" id="sector-select" style="width:auto;height:30px;font-size:11px;padding:2px 8px;" aria-label="Filter by Sector">
+      <option value="all">All Sectors</option>
+      <option value="Sector A">Sector A — North Tower</option>
+      <option value="Sector B">Sector B — Crane Staging</option>
+      <option value="Sector C">Sector C — South Tower</option>
+      <option value="Sector D">Sector D — Loading Bay</option>
+      <option value="Sector E">Sector E — Perimeter</option>
+    </select>
+  </div>
+
+  <!-- Search and View Switch -->
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div class="input-icon-wrap" style="width:220px;position:relative;">
+      <svg style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--color-text-tertiary);" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input
+        type="search"
+        id="camera-search"
+        class="input"
+        placeholder="Filter by ID, IP, or model..."
+        style="padding-left:28px;height:30px;font-size:11px;"
+        aria-label="Filter camera list"
+      />
+    </div>
+
+    <!-- Toggle View Mode -->
+    <div style="display:flex;border:1px solid var(--color-border);border-radius:var(--radius-sm);overflow:hidden;">
+      <button class="view-btn active" id="view-cards-btn" title="Feed Cards View" aria-label="Cards View">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+      </button>
+      <button class="view-btn" id="view-table-btn" title="Technical Registry Table View" aria-label="Table View">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+          <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW 1: FEED CARDS GRID -->
+<div id="cards-container" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(340px, 1fr));gap:16px;">
+  {cameras.map(cam => (
+    <div
+      class="camera-card-item card"
+      data-id={cam.id}
+      data-status={cam.status}
+      data-sector={cam.sector}
+      data-name={cam.name}
+      data-ip={cam.ip}
+      style="padding:0;overflow:hidden;display:flex;flex-direction:column;border-color:var(--color-border);transition:border-color 0.2s;"
+    >
+      <!-- Simulated Video Feed Frame -->
+      <div style="position:relative;background:#060a12;aspect-ratio:16/9;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+        {cam.status === 'offline' ? (
+          <div style="text-align:center;color:var(--color-text-tertiary);">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-critical)" stroke-width="1.5" style="margin:0 auto 8px;">
+              <line x1="1" y1="1" x2="23" y2="23"/>
+              <path d="M21 21H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3m3-3h6l2 3h4a2 2 0 0 1 2 2v9.34"/>
+            </svg>
+            <div style="font-family:var(--font-mono);font-size:12px;color:var(--color-critical);font-weight:600;">NO SIGNAL / RTSP TIMEOUT</div>
+            <div style="font-size:10px;margin-top:2px;">Check PoE power injector or fiber switch port</div>
+          </div>
+        ) : (
+          <>
+            <!-- Simulated CCTV background elements -->
+            <svg viewBox="0 0 400 225" style="position:absolute;inset:0;width:100%;height:100%;opacity:0.6;">
+              <!-- Construction site schematic silhouettes -->
+              <rect x="0" y="160" width="400" height="65" fill="#0d1829"/>
+              <line x1="40" y1="160" x2="40" y2="40" stroke="#1f293d" stroke-width="3"/>
+              <line x1="120" y1="160" x2="120" y2="20" stroke="#1f293d" stroke-width="4"/>
+              <line x1="260" y1="160" x2="260" y2="70" stroke="#1f293d" stroke-width="3"/>
+              <line x1="20" y1="40" x2="160" y2="20" stroke="#1e3a5f" stroke-width="1.5" stroke-dasharray="4,4"/>
+              <!-- Scaffolding cross-braces -->
+              <line x1="40" y1="40" x2="120" y2="100" stroke="#16253b" stroke-width="1"/>
+              <line x1="40" y1="100" x2="120" y2="40" stroke="#16253b" stroke-width="1"/>
+              <!-- Workers detected -->
+              {cam.status === 'online' && (
+                <>
+                  <rect x="70" y="90" width="34" height="65" fill="none" stroke="#10B981" stroke-width="1.5" stroke-dasharray="3,2"/>
+                  <text x="70" y="85" fill="#10B981" font-size="8" font-family="monospace">P01 [98% PPE]</text>
+                  <rect x="220" y="110" width="36" height="50" fill="none" stroke={cam.activeThreats > 0 ? '#EF4444' : '#10B981'} stroke-width="1.5"/>
+                  <text x="220" y="105" fill={cam.activeThreats > 0 ? '#EF4444' : '#10B981'} font-size="8" font-family="monospace">
+                    {cam.activeThreats > 0 ? 'VIOLATION: NO-HELMET' : 'P02 [94% PPE]'}
+                  </text>
+                </>
+              )}
+            </svg>
+
+            <!-- Video Scanline Scan Bar -->
+            <div class="cctv-scanline" style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg, transparent, rgba(59,130,246,0.06), transparent);animation:scanline 4s linear infinite;"></div>
+
+            <!-- CCTV HUD Overlay -->
+            <div style="position:absolute;top:8px;left:8px;display:flex;align-items:center;gap:6px;background:rgba(11,18,32,0.75);backdrop-filter:blur(4px);padding:2px 6px;border-radius:3px;border:1px solid rgba(255,255,255,0.08);">
+              <span class={`status-dot ${cam.status === 'online' ? 'safe' : 'warning'}`}></span>
+              <span style="font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.04em;">{cam.id}</span>
+              <span style="color:var(--color-text-tertiary);font-size:9px;">•</span>
+              <span style="font-family:var(--font-mono);font-size:9px;color:var(--color-text-secondary);">{cam.res.split(' ')[0]}</span>
+            </div>
+
+            <div style="position:absolute;top:8px;right:8px;background:rgba(11,18,32,0.75);backdrop-filter:blur(4px);padding:2px 6px;border-radius:3px;font-family:var(--font-mono);font-size:10px;color:var(--color-safe);border:1px solid rgba(16,185,129,0.2);">
+              REC • {cam.fps} FPS
+            </div>
+
+            <!-- Threat badge overlay if critical -->
+            {cam.activeThreats > 0 && (
+              <div style="position:absolute;bottom:8px;left:8px;background:rgba(239,68,68,0.9);color:#fff;font-family:var(--font-mono);font-size:9px;font-weight:700;padding:2px 6px;border-radius:2px;letter-spacing:0.04em;display:flex;align-items:center;gap:4px;">
+                <span style="display:inline-block;width:5px;height:5px;background:#fff;border-radius:50%;animation:blink 1s infinite;"></span>
+                {cam.activeThreats} ACTIVE {cam.activeThreats === 1 ? 'ALERT' : 'ALERTS'}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      <!-- Card Details & Telemetry -->
+      <div style="padding:14px;flex:1;display:flex;flex-direction:column;justify-content:space-between;gap:12px;">
+        <div>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;">
+            <div>
+              <div style="font-weight:600;font-size:13px;color:var(--color-text-primary);">{cam.name}</div>
+              <div style="font-size:11px;color:var(--color-text-tertiary);font-family:var(--font-mono);margin-top:2px;">
+                {cam.model} • {cam.sector}
+              </div>
+            </div>
+            <span class={`badge ${cam.status === 'online' ? 'badge-safe' : cam.status === 'warning' ? 'badge-warning' : 'badge-critical'}`} style="font-size:10px;">
+              {cam.status.toUpperCase()}
+            </span>
+          </div>
+
+          <!-- Network Metrics Mini Grid -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;background:rgba(255,255,255,0.02);border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:8px;margin-top:8px;">
+            <div>
+              <div style="font-size:9px;color:var(--color-text-tertiary);text-transform:uppercase;">Bitrate</div>
+              <div style="font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--color-text-secondary);margin-top:2px;">{cam.bitrate}</div>
+            </div>
+            <div>
+              <div style="font-size:9px;color:var(--color-text-tertiary);text-transform:uppercase;">Latency</div>
+              <div style={`font-family:var(--font-mono);font-size:11px;font-weight:600;margin-top:2px;color:${cam.latency.includes('ms') && parseInt(cam.latency)<50 ? 'var(--color-safe)' : cam.status==='offline' ? 'var(--color-critical)' : 'var(--color-warning)'};`}>
+                {cam.latency}
+              </div>
+            </div>
+            <div>
+              <div style="font-size:9px;color:var(--color-text-tertiary);text-transform:uppercase;">Health</div>
+              <div style={`font-family:var(--font-mono);font-size:11px;font-weight:600;margin-top:2px;color:${cam.health>85 ? 'var(--color-safe)' : cam.health>50 ? 'var(--color-warning)' : 'var(--color-critical)'};`}>
+                {cam.health}%
+              </div>
+            </div>
+          </div>
+
+          <!-- Attached AI Pipelines -->
+          <div style="margin-top:10px;">
+            <div style="font-size:10px;font-weight:600;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;">
+              Active Vision Models
+            </div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              {cam.aiPipelines.map(pipe => (
+                <span style="font-size:9px;font-family:var(--font-mono);background:rgba(37,99,235,0.12);color:var(--color-primary);border:1px solid rgba(59,130,246,0.3);padding:1px 5px;border-radius:3px;">
+                  {pipe}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--color-border);gap:6px;">
+          <a href="/monitoring" class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;font-size:11px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 7 16 12 23 17V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/>
+            </svg>
+            Live Feed
+          </a>
+          <button class="btn btn-secondary btn-sm btn-diag" data-cam-id={cam.id} style="flex:1;justify-content:center;font-size:11px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            Telemetry
+          </button>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
+
+<!-- VIEW 2: TECHNICAL REGISTRY TABLE (hidden by default) -->
+<div id="table-container" class="card" style="display:none;overflow:hidden;padding:0;">
+  <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:left;">
+      <thead>
+        <tr style="background:rgba(255,255,255,0.02);border-bottom:1px solid var(--color-border);">
+          <th style="padding:10px 14px;color:var(--color-text-tertiary);font-family:var(--font-mono);font-size:10px;text-transform:uppercase;">ID</th>
+          <th style="padding:10px 14px;color:var(--color-text-tertiary);font-size:10px;text-transform:uppercase;">Camera Node & Location</th>
+          <th style="padding:10px 14px;color:var(--color-text-tertiary);font-size:10px;text-transform:uppercase;">RTSP Stream URI</th>
+          <th style="padding:10px 14px;color:var(--color-text-tertiary);font-size:10px;text-transform:uppercase;">Resolution</th>
+          <th style="padding:10px 14px;color:var(--color-text-tertiary);font-size:10px;text-transform:uppercase;">FPS / Codec</th>
+          <th style="padding:10px 14px;color:var(--color-text-tertiary);font-size:10px;text-transform:uppercase;">Bitrate & Loss</th>
+          <th style="padding:10px 14px;color:var(--color-text-tertiary);font-size:10px;text-transform:uppercase;">Status</th>
+          <th style="padding:10px 14px;color:var(--color-text-tertiary);font-size:10px;text-transform:uppercase;">Health</th>
+          <th style="padding:10px 14px;color:var(--color-text-tertiary);font-size:10px;text-transform:uppercase;text-align:right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {cameras.map(cam => (
+          <tr class="table-cam-row" data-id={cam.id} data-status={cam.status} data-sector={cam.sector} data-name={cam.name} style="border-bottom:1px solid var(--color-border);transition:background 0.15s;">
+            <td style="padding:12px 14px;font-family:var(--font-mono);color:var(--color-primary);font-weight:700;">{cam.id}</td>
+            <td style="padding:12px 14px;">
+              <div style="font-weight:600;color:var(--color-text-primary);">{cam.name}</div>
+              <div style="font-size:10px;color:var(--color-text-tertiary);font-family:var(--font-mono);">{cam.model} • {cam.sector}</div>
+            </td>
+            <td style="padding:12px 14px;font-family:var(--font-mono);font-size:10px;color:var(--color-text-secondary);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              {cam.url}
+            </td>
+            <td style="padding:12px 14px;font-family:var(--font-mono);">{cam.res.split(' ')[0]}</td>
+            <td style="padding:12px 14px;font-family:var(--font-mono);">
+              <span style={`color:${cam.fps > 0 ? 'var(--color-text-primary)' : 'var(--color-critical)'};`}>{cam.fps > 0 ? `${cam.fps} FPS` : 'OFFLINE'}</span>
+              <div style="font-size:9px;color:var(--color-text-tertiary);">{cam.codec}</div>
+            </td>
+            <td style="padding:12px 14px;font-family:var(--font-mono);">
+              <div>{cam.bitrate}</div>
+              <div style={`font-size:9px;color:${parseFloat(cam.packetLoss)>1 ? 'var(--color-critical)' : 'var(--color-text-tertiary)'};`}>loss: {cam.packetLoss}</div>
+            </td>
+            <td style="padding:12px 14px;">
+              <span class={`badge ${cam.status === 'online' ? 'badge-safe' : cam.status === 'warning' ? 'badge-warning' : 'badge-critical'}`} style="font-size:10px;">
+                {cam.status}
+              </span>
+            </td>
+            <td style="padding:12px 14px;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div style="width:50px;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;">
+                  <div style={`height:100%;width:${cam.health}%;background:${cam.health>80 ? 'var(--color-safe)' : cam.health>50 ? 'var(--color-warning)' : 'var(--color-critical)'};`}></div>
+                </div>
+                <span style="font-family:var(--font-mono);font-size:11px;font-weight:600;">{cam.health}%</span>
+              </div>
+            </td>
+            <td style="padding:12px 14px;text-align:right;">
+              <button class="btn btn-ghost btn-sm btn-diag" data-cam-id={cam.id} style="font-size:11px;">
+                Diagnostics
+              </button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL: REGISTER NEW CAMERA NODE -->
+<div id="modal-add-camera" class="modal-backdrop" style="display:none;position:fixed;inset:0;background:rgba(6,10,18,0.85);backdrop-filter:blur(6px);z-index:9999;align-items:center;justify-content:center;">
+  <div class="card" style="width:100%;max-width:540px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow-xl);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:34px;height:34px;border-radius:var(--radius-sm);background:rgba(37,99,235,0.15);border:1px solid var(--color-primary);display:flex;align-items:center;justify-content:center;color:var(--color-primary);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 7 16 12 23 17V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/>
+          </svg>
+        </div>
+        <div>
+          <h2 style="font-size:15px;font-weight:700;color:var(--color-text-primary);margin:0;">Register Camera Node</h2>
+          <p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0 0;">Provision RTSP/ONVIF stream for real-time AI inference</p>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="btn-close-modal" aria-label="Close modal">✕</button>
+    </div>
+
+    <form id="form-register-cam" style="display:flex;flex-direction:column;gap:14px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="display:block;font-size:11px;font-weight:600;color:var(--color-text-secondary);margin-bottom:4px;">Camera ID</label>
+          <input type="text" class="input" placeholder="e.g. CAM-11" required />
+        </div>
+        <div>
+          <label style="display:block;font-size:11px;font-weight:600;color:var(--color-text-secondary);margin-bottom:4px;">Sector Assignment</label>
+          <select class="input" required>
+            <option>Sector A — North Tower</option>
+            <option>Sector B — Crane Staging</option>
+            <option>Sector C — South Tower</option>
+            <option>Sector D — Loading Bay</option>
+            <option>Sector E — Perimeter</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label style="display:block;font-size:11px;font-weight:600;color:var(--color-text-secondary);margin-bottom:4px;">Location Name / Description</label>
+        <input type="text" class="input" placeholder="e.g. West Wing Scaffolding Level 04" required />
+      </div>
+
+      <div>
+        <label style="display:block;font-size:11px;font-weight:600;color:var(--color-text-secondary);margin-bottom:4px;">RTSP Stream URI</label>
+        <input type="text" class="input" placeholder="rtsp://10.0.1.xxx:554/live/main" style="font-family:var(--font-mono);" required />
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="display:block;font-size:11px;font-weight:600;color:var(--color-text-secondary);margin-bottom:4px;">Hardware Model</label>
+          <input type="text" class="input" placeholder="e.g. Axis Q1656-LE" />
+        </div>
+        <div>
+          <label style="display:block;font-size:11px;font-weight:600;color:var(--color-text-secondary);margin-bottom:4px;">Target Inference FPS</label>
+          <select class="input">
+            <option>30 FPS (Full Real-Time)</option>
+            <option>25 FPS (Standard High-Speed)</option>
+            <option>15 FPS (Resource Optimized)</option>
+            <option>5 FPS (Perimeter Low-Power)</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label style="display:block;font-size:11px;font-weight:600;color:var(--color-text-secondary);margin-bottom:6px;">Attach AI Vision Pipelines</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" checked /> YOLOv8-PPE Detection
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" checked /> Exclusion Geofence
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" /> Proximity & Heavy Machinery
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" /> Worker Fall & Slip Detection
+          </label>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;padding-top:14px;border-top:1px solid var(--color-border);">
+        <button type="button" class="btn btn-ghost" id="btn-cancel-modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Connect & Provision Stream</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: CAMERA DIAGNOSTICS & TELEMETRY -->
+<div id="modal-diagnostics" class="modal-backdrop" style="display:none;position:fixed;inset:0;background:rgba(6,10,18,0.85);backdrop-filter:blur(6px);z-index:9999;align-items:center;justify-content:center;">
+  <div class="card" style="width:100%;max-width:580px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow-xl);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div>
+        <span class="badge badge-primary" id="diag-cam-id" style="font-family:var(--font-mono);font-size:11px;">CAM-01</span>
+        <h2 style="font-size:15px;font-weight:700;color:var(--color-text-primary);margin:4px 0 0 0;" id="diag-cam-name">Diagnostics</h2>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="btn-close-diag">✕</button>
+    </div>
+
+    <!-- Telemetry Cards -->
+    <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;margin-bottom:16px;">
+      <div class="card" style="padding:10px;background:rgba(255,255,255,0.02);">
+        <div style="font-size:10px;color:var(--color-text-tertiary);">RTSP Status</div>
+        <div style="font-size:13px;font-weight:700;color:var(--color-safe);margin-top:2px;">ESTABLISHED</div>
+      </div>
+      <div class="card" style="padding:10px;background:rgba(255,255,255,0.02);">
+        <div style="font-size:10px;color:var(--color-text-tertiary);">Jitter / Latency</div>
+        <div style="font-size:13px;font-weight:700;color:var(--color-safe);margin-top:2px;" id="diag-cam-lat">18 ms</div>
+      </div>
+      <div class="card" style="padding:10px;background:rgba(255,255,255,0.02);">
+        <div style="font-size:10px;color:var(--color-text-tertiary);">Buffer Health</div>
+        <div style="font-size:13px;font-weight:700;color:var(--color-safe);margin-top:2px;">99.4% OK</div>
+      </div>
+    </div>
+
+    <!-- Live Ping Waveform SVG -->
+    <div style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-size:11px;font-weight:600;color:var(--color-text-secondary);">Packet Stream Stability (Last 60s)</span>
+        <span style="font-size:10px;font-family:var(--font-mono);color:var(--color-safe);">0 drops detected</span>
+      </div>
+      <div style="background:#060a12;border:1px solid var(--color-border);border-radius:var(--radius-sm);height:80px;padding:8px;position:relative;overflow:hidden;">
+        <svg viewBox="0 0 500 64" preserveAspectRatio="none" style="width:100%;height:100%;">
+          <path d="M0,45 L40,42 L80,44 L120,38 L160,40 L200,43 L240,39 L280,41 L320,44 L360,40 L400,38 L440,42 L480,40 L500,41" fill="none" stroke="#2563EB" stroke-width="2"/>
+          <path d="M0,45 L40,42 L80,44 L120,38 L160,40 L200,43 L240,39 L280,41 L320,44 L360,40 L400,38 L440,42 L480,40 L500,41 L500,64 L0,64 Z" fill="rgba(37,99,235,0.15)"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Quick Maintenance Actions -->
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn btn-secondary btn-sm" id="btn-reboot-node">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+        </svg>
+        Reboot RTSP Driver
+      </button>
+      <button class="btn btn-primary btn-sm" id="btn-calibrate-model">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/>
+        </svg>
+        Recalibrate Bounding Boxes
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+.filter-tab {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.filter-tab:hover {
+  background: rgba(255,255,255,0.04);
+  color: var(--color-text-primary);
+}
+.filter-tab.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+.view-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-tertiary);
+  padding: 6px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.view-btn:hover {
+  color: var(--color-text-primary);
+}
+.view-btn.active {
+  background: rgba(37,99,235,0.2);
+  color: var(--color-primary);
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(1000%); }
+}
+</style>
+
+<script>
+  // Filter Tabs
+  const filterTabs = document.querySelectorAll('.filter-tab');
+  const sectorSelect = document.getElementById('sector-select') as HTMLSelectElement;
+  const searchInput = document.getElementById('camera-search') as HTMLInputElement;
+  const cardItems = document.querySelectorAll<HTMLElement>('.camera-card-item');
+  const tableRows = document.querySelectorAll<HTMLElement>('.table-cam-row');
+
+  function applyFilters() {
+    const activeTab = document.querySelector('.filter-tab.active')?.getAttribute('data-filter') || 'all';
+    const sector = sectorSelect?.value || 'all';
+    const query = searchInput?.value.toLowerCase().trim() || '';
+
+    const filterItem = (el: HTMLElement) => {
+      const status = el.dataset.status || '';
+      const sec = el.dataset.sector || '';
+      const name = (el.dataset.name || '').toLowerCase();
+      const id = (el.dataset.id || '').toLowerCase();
+      const ip = (el.dataset.ip || '').toLowerCase();
+
+      const matchTab = activeTab === 'all' || status === activeTab;
+      const matchSector = sector === 'all' || sec === sector;
+      const matchQuery = !query || name.includes(query) || id.includes(query) || ip.includes(query);
+
+      el.style.display = (matchTab && matchSector && matchQuery) ? '' : 'none';
+    };
+
+    cardItems.forEach(filterItem);
+    tableRows.forEach(filterItem);
+  }
+
+  filterTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      filterTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      applyFilters();
+    });
+  });
+
+  sectorSelect?.addEventListener('change', applyFilters);
+  searchInput?.addEventListener('input', applyFilters);
+
+  // View Mode Switcher
+  const viewCardsBtn = document.getElementById('view-cards-btn');
+  const viewTableBtn = document.getElementById('view-table-btn');
+  const cardsContainer = document.getElementById('cards-container');
+  const tableContainer = document.getElementById('table-container');
+
+  viewCardsBtn?.addEventListener('click', () => {
+    viewCardsBtn.classList.add('active');
+    viewTableBtn?.classList.remove('active');
+    if (cardsContainer) cardsContainer.style.display = 'grid';
+    if (tableContainer) tableContainer.style.display = 'none';
+  });
+
+  viewTableBtn?.addEventListener('click', () => {
+    viewTableBtn.classList.add('active');
+    viewCardsBtn?.classList.remove('active');
+    if (cardsContainer) cardsContainer.style.display = 'none';
+    if (tableContainer) tableContainer.style.display = 'block';
+  });
+
+  // Modal Provisioning
+  const addModal = document.getElementById('modal-add-camera');
+  const btnAddCamera = document.getElementById('btn-add-camera');
+  const btnCloseModal = document.getElementById('btn-close-modal');
+  const btnCancelModal = document.getElementById('btn-cancel-modal');
+  const formRegisterCam = document.getElementById('form-register-cam');
+
+  btnAddCamera?.addEventListener('click', () => {
+    if (addModal) addModal.style.display = 'flex';
+  });
+
+  const hideModal = () => {
+    if (addModal) addModal.style.display = 'none';
+  };
+
+  btnCloseModal?.addEventListener('click', hideModal);
+  btnCancelModal?.addEventListener('click', hideModal);
+  formRegisterCam?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    alert('Camera node successfully registered! RTSP handshake complete.');
+    hideModal();
+  });
+
+  // Diagnostics Modal
+  const diagModal = document.getElementById('modal-diagnostics');
+  const btnCloseDiag = document.getElementById('btn-close-diag');
+  const diagCamId = document.getElementById('diag-cam-id');
+  const diagCamName = document.getElementById('diag-cam-name');
+  const diagBtns = document.querySelectorAll('.btn-diag');
+
+  diagBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cid = btn.getAttribute('data-cam-id') || 'CAM-01';
+      if (diagCamId) diagCamId.textContent = cid;
+      if (diagCamName) diagCamName.textContent = `Diagnostic Telemetry — ${cid}`;
+      if (diagModal) diagModal.style.display = 'flex';
+    });
+  });
+
+  btnCloseDiag?.addEventListener('click', () => {
+    if (diagModal) diagModal.style.display = 'none';
+  });
+
+  document.getElementById('btn-refresh-all')?.addEventListener('click', () => {
+    alert('Pinging all 27 RTSP edge nodes... 22 responsive, 3 high jitter, 2 timeout.');
+  });
+  document.getElementById('btn-reboot-node')?.addEventListener('click', () => {
+    alert('Signal sent to edge gateway: restarting GStreamer RTSP pipeline.');
+  });
+  document.getElementById('btn-calibrate-model')?.addEventListener('click', () => {
+    alert('Calibration initiated: YOLOv8 dynamic anchors synchronized.');
+  });
+</script>
+
+</Layout>

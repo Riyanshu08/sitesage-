@@ -1,0 +1,324 @@
+---
+/**
+ * SiteSage — Incident Log
+ * Route: /incidents
+ * Dense operational table with full filter bar, severity system, evidence trail
+ */
+import Layout from '../layouts/Layout.astro';
+
+const incidents = [
+  { id:'INC-0248', type:'No Hard Hat',          severity:'critical', cam:'CAM-04', sector:'B', location:'Crane Zone',    time:'14:43:17', timeDisplay:'02:43 PM', worker:'TRACK-024', confidence:98, status:'open',          assignee:null,      aiState:'ai-detected' },
+  { id:'INC-0247', type:'Restricted Zone Breach',severity:'critical', cam:'CAM-03', sector:'B', location:'Sector B Entry',time:'14:38:44', timeDisplay:'02:38 PM', worker:'TRACK-019', confidence:94, status:'investigating',  assignee:'J. Reyes',aiState:'ai-detected' },
+  { id:'INC-0246', type:'No Safety Vest',        severity:'high',     cam:'CAM-01', sector:'A', location:'Level 08',      time:'14:31:05', timeDisplay:'02:31 PM', worker:'TRACK-011', confidence:91, status:'open',          assignee:null,      aiState:'ai-detected' },
+  { id:'INC-0245', type:'Proximity Alert',        severity:'high',     cam:'CAM-04', sector:'B', location:'Crane Swing',   time:'14:28:30', timeDisplay:'02:28 PM', worker:'TRACK-033', confidence:88, status:'acknowledged',  assignee:'R. Santos',aiState:'ai-detected' },
+  { id:'INC-0244', type:'No Gloves',              severity:'medium',   cam:'CAM-04', sector:'B', location:'Material Handling',time:'14:15:22',timeDisplay:'02:15 PM',worker:'TRACK-027',confidence:96, status:'resolved',      assignee:'M. Chen', aiState:'confirmed' },
+  { id:'INC-0243', type:'Unauthorized Entry',     severity:'critical', cam:'CAM-05', sector:'C', location:'Gate C',        time:'14:07:55', timeDisplay:'02:07 PM', worker:'UNKNOWN',   confidence:97, status:'resolved',      assignee:'J. Reyes',aiState:'false-positive' },
+  { id:'INC-0242', type:'Low Visibility Zone',    severity:'medium',   cam:'CAM-03', sector:'C', location:'Sector C',      time:'13:55:10', timeDisplay:'01:55 PM', worker:'N/A',       confidence:85, status:'resolved',      assignee:'M. Chen', aiState:'confirmed' },
+  { id:'INC-0241', type:'No Hard Hat',            severity:'critical', cam:'CAM-04', sector:'B', location:'Crane Zone',    time:'13:42:08', timeDisplay:'01:42 PM', worker:'TRACK-089', confidence:99, status:'resolved',      assignee:'J. Reyes',aiState:'confirmed' },
+  { id:'INC-0240', type:'Emergency Stop Breach',  severity:'critical', cam:'CAM-01', sector:'A', location:'Level 12',      time:'13:30:44', timeDisplay:'01:30 PM', worker:'TRACK-034', confidence:93, status:'resolved',      assignee:'R. Santos',aiState:'confirmed' },
+  { id:'INC-0239', type:'PPE Degradation',        severity:'medium',   cam:'CAM-02', sector:'A', location:'Level 08',      time:'13:15:22', timeDisplay:'01:15 PM', worker:'TRACK-156', confidence:87, status:'resolved',      assignee:'M. Chen', aiState:'confirmed' },
+];
+
+const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+const statusColor = (s: string) =>
+  s === 'open' ? 'critical' : s === 'investigating' ? 'warning' : s === 'acknowledged' ? 'primary' : 'safe';
+const aiStateLabel = (s: string) =>
+  s === 'ai-detected' ? 'AI Detected' : s === 'confirmed' ? 'Human Confirmed' : 'False Positive';
+const aiStateColor = (s: string) =>
+  s === 'ai-detected' ? 'var(--color-warning)' : s === 'confirmed' ? 'var(--color-safe)' : 'var(--color-text-tertiary)';
+---
+
+<Layout
+  title="Incidents"
+  breadcrumb={['Site Dashboard', 'Incidents']}
+  activePage="incidents"
+>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Incident Log</h1>
+    <p class="page-subtitle">AI-generated safety violation records with full evidence trail — 10 incidents shown</p>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-ghost" id="filter-toggle" aria-expanded="false" aria-controls="filter-panel">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+      </svg>
+      Filter
+    </button>
+    <button class="btn btn-primary">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Export CSV
+    </button>
+  </div>
+</div>
+
+<!-- SUMMARY ROW -->
+<div class="ops-status-strip" role="status" aria-label="Incident summary">
+  {[
+    { label:'Open',          count:3,  color:'var(--color-critical)' },
+    { label:'Investigating', count:1,  color:'var(--color-warning)' },
+    { label:'Acknowledged',  count:1,  color:'var(--color-primary-hover)' },
+    { label:'Resolved',      count:5,  color:'var(--color-safe)' },
+    { label:'Critical',      count:5,  color:'var(--color-critical)' },
+    { label:'High',          count:2,  color:'var(--color-warning)' },
+    { label:'Avg Confidence',count:'93%', color:'var(--color-cyan)' },
+  ].map(s => (
+    <div class="ops-status-item">
+      <div>
+        <div class="ops-status-label">{s.label}</div>
+        <div class="ops-status-value" style={`color:${s.color};`}>{s.count}</div>
+      </div>
+    </div>
+  ))}
+</div>
+
+<!-- FILTER PANEL (collapsed by default) -->
+<div id="filter-panel" style="display:none;" aria-hidden="true">
+  <div class="card" style="padding:16px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">
+      {[
+        { label:'Severity', options:['All','Critical','High','Medium','Low'] },
+        { label:'Status',   options:['All','Open','Investigating','Acknowledged','Resolved'] },
+        { label:'Camera',   options:['All','CAM-01','CAM-02','CAM-03','CAM-04','CAM-05','CAM-06'] },
+        { label:'Sector',   options:['All','A','B','C','D','E'] },
+        { label:'Detection',options:['All','No Helmet','No Vest','Zone Breach','Proximity','No Gloves'] },
+        { label:'Assignee', options:['All','Unassigned','J. Reyes','R. Santos','M. Chen'] },
+      ].map(f => (
+        <div>
+          <label style="display:block;font-size:var(--text-xxs);font-weight:var(--weight-bold);letter-spacing:var(--tracking-technical);text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:5px;">
+            {f.label}
+          </label>
+          <select class="input" style="height:32px;font-size:var(--text-xs);" aria-label={`Filter by ${f.label}`}>
+            {f.options.map(o => <option>{o}</option>)}
+          </select>
+        </div>
+      ))}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
+      <button class="btn btn-ghost btn-sm">Reset Filters</button>
+      <button class="btn btn-primary btn-sm">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- INCIDENTS TABLE -->
+<div class="card" style="overflow:hidden;">
+  <!-- Table search bar -->
+  <div class="panel-header">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-tertiary)" stroke-width="2" aria-hidden="true">
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+    </svg>
+    <span class="panel-title">All Incidents</span>
+    <div class="panel-actions">
+      <div class="input-wrap" style="width:200px;">
+        <svg class="input-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="input" type="search" placeholder="Search incidents..." style="font-size:var(--text-xs);height:28px;" aria-label="Search incidents" id="incident-search"/>
+      </div>
+      <span class="tech-label" style="white-space:nowrap;">10 records</span>
+    </div>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table class="data-table" aria-label="Incident log">
+      <thead>
+        <tr>
+          {[
+            { key:'id',         label:'Incident ID' },
+            { key:'severity',   label:'Severity' },
+            { key:'type',       label:'Detection' },
+            { key:'location',   label:'Location' },
+            { key:'cam',        label:'Camera' },
+            { key:'timeDisplay',label:'Time' },
+            { key:'confidence', label:'Confidence' },
+            { key:'aiState',    label:'AI State' },
+            { key:'status',     label:'Status' },
+            { key:'assignee',   label:'Assignee' },
+            { key:'actions',    label:'Actions' },
+          ].map(col => (
+            <th scope="col" style={col.key === 'actions' ? 'width:80px;' : ''}>
+              {col.label}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody id="incidents-tbody">
+        {incidents.map(inc => (
+          <tr class="incident-row"
+              data-severity={inc.severity}
+              data-status={inc.status}
+              style="cursor:pointer;"
+              data-open-drawer
+              data-incident-id={inc.id}
+              data-detection={inc.type}
+              data-camera={inc.cam}
+              data-location={`${inc.sector} — ${inc.location}`}
+              data-confidence={String(inc.confidence)}
+              data-severity={inc.severity}
+              data-timestamp={inc.time}
+              tabindex="0"
+              aria-label={`Open incident ${inc.id}: ${inc.type}. ${inc.severity} severity. Status: ${inc.status}.`}>
+
+            <!-- ID -->
+            <td>
+              <span style="font-family:var(--font-mono);font-size:var(--text-xxs);color:var(--color-cyan);">{inc.id}</span>
+            </td>
+
+            <!-- Severity -->
+            <td>
+              <span class={`badge badge-${inc.severity === 'critical' ? 'critical' : inc.severity === 'high' ? 'warning' : 'primary'}`}>
+                {inc.severity === 'critical' ? (
+                  <><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg> CRITICAL</>
+                ) : inc.severity === 'high' ? (
+                  <><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><line x1="12" y1="4" x2="12" y2="14"/><circle cx="12" cy="19" r="1" fill="currentColor"/></svg> HIGH</>
+                ) : 'MEDIUM'}
+              </span>
+            </td>
+
+            <!-- Detection type -->
+            <td>
+              <span style="font-size:var(--text-sm);font-weight:var(--weight-medium);">{inc.type}</span>
+            </td>
+
+            <!-- Location -->
+            <td>
+              <div style="font-size:var(--text-xs);">{inc.location}</div>
+              <div style="font-size:var(--text-technical);color:var(--color-text-tertiary);font-family:var(--font-mono);margin-top:1px;">Sector {inc.sector}</div>
+            </td>
+
+            <!-- Camera -->
+            <td>
+              <span style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-cyan);">{inc.cam}</span>
+            </td>
+
+            <!-- Time -->
+            <td>
+              <div style="font-size:var(--text-xs);">{inc.timeDisplay}</div>
+              <div style="font-family:var(--font-mono);font-size:9px;color:var(--color-text-tertiary);">{inc.time}</div>
+            </td>
+
+            <!-- Confidence bar -->
+            <td>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="width:48px;height:4px;background:var(--color-border);border-radius:var(--radius-full);overflow:hidden;">
+                  <div style={`height:100%;width:${inc.confidence}%;background:${inc.confidence >= 95 ? 'var(--color-critical)' : inc.confidence >= 85 ? 'var(--color-warning)' : 'var(--color-primary-hover)'};border-radius:var(--radius-full);`}></div>
+                </div>
+                <span style="font-size:var(--text-xs);font-weight:var(--weight-semibold);font-family:var(--font-mono);">{inc.confidence}%</span>
+              </div>
+            </td>
+
+            <!-- AI State -->
+            <td>
+              <div style={`font-size:9px;font-weight:var(--weight-bold);color:${aiStateColor(inc.aiState)};white-space:nowrap;`}>
+                {inc.aiState === 'ai-detected' && (
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;margin-right:3px;vertical-align:middle;" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                )}
+                {inc.aiState === 'confirmed' && (
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;margin-right:3px;vertical-align:middle;" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                )}
+                {inc.aiState === 'false-positive' && (
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;margin-right:3px;vertical-align:middle;" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                )}
+                {aiStateLabel(inc.aiState)}
+              </div>
+            </td>
+
+            <!-- Status -->
+            <td>
+              <span class={`badge badge-${statusColor(inc.status)}`} style="font-size:9px;">
+                {inc.status === 'open' ? 'OPEN' : inc.status === 'investigating' ? 'INVESTIGATING' : inc.status === 'acknowledged' ? 'ACKNOWLEDGED' : 'RESOLVED'}
+              </span>
+            </td>
+
+            <!-- Assignee -->
+            <td>
+              {inc.assignee ? (
+                <div style="display:flex;align-items:center;gap:5px;">
+                  <div style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--color-primary),var(--color-cyan));display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;flex-shrink:0;">
+                    {inc.assignee.split(' ').map((n: string) => n[0]).join('')}
+                  </div>
+                  <span style="font-size:var(--text-xxs);color:var(--color-text-secondary);">{inc.assignee}</span>
+                </div>
+              ) : (
+                <span style="font-size:var(--text-xxs);color:var(--color-text-disabled);">Unassigned</span>
+              )}
+            </td>
+
+            <!-- Actions -->
+            <td onclick="event.stopPropagation()">
+              <div style="display:flex;gap:4px;">
+                <button class="btn-icon"
+                        title="Open incident investigation"
+                        aria-label={`Investigate ${inc.id}`}
+                        data-open-drawer
+                        data-incident-id={inc.id}
+                        data-detection={inc.type}
+                        data-camera={inc.cam}
+                        data-location={`${inc.sector} — ${inc.location}`}
+                        data-confidence={String(inc.confidence)}
+                        data-severity={inc.severity}
+                        data-timestamp={inc.time}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                  </svg>
+                </button>
+                {inc.status !== 'resolved' && (
+                  <button class="btn-icon" title={`Resolve ${inc.id}`} aria-label={`Resolve incident ${inc.id}`}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+  .incident-row:hover { background: var(--color-surface-hover); }
+  .incident-row:focus { outline: 2px solid var(--color-primary-hover); outline-offset: -2px; }
+  .input-wrap .input-icon { position: absolute; left: 9px; pointer-events: none; color: var(--color-text-tertiary); }
+  .input-wrap { position: relative; display: flex; align-items: center; }
+  .input-wrap .input { padding-left: 28px; }
+</style>
+
+<script>
+  // Filter panel toggle
+  const filterToggle = document.getElementById('filter-toggle')!;
+  const filterPanel  = document.getElementById('filter-panel')!;
+  filterToggle.addEventListener('click', () => {
+    const isOpen = filterPanel.style.display === '';
+    filterPanel.style.display = isOpen ? 'none' : '';
+    filterPanel.setAttribute('aria-hidden', isOpen ? 'true' : 'false');
+    filterToggle.setAttribute('aria-expanded', String(!isOpen));
+  });
+
+  // Live search filter
+  const searchInput = document.getElementById('incident-search') as HTMLInputElement;
+  const rows = document.querySelectorAll('.incident-row');
+  searchInput?.addEventListener('input', () => {
+    const q = searchInput.value.toLowerCase();
+    rows.forEach(row => {
+      const text = row.textContent?.toLowerCase() ?? '';
+      (row as HTMLElement).style.display = text.includes(q) ? '' : 'none';
+    });
+  });
+
+  // Keyboard: Enter on row opens drawer
+  rows.forEach(row => {
+    row.addEventListener('keydown', (e) => {
+      if ((e as KeyboardEvent).key === 'Enter' || (e as KeyboardEvent).key === ' ') {
+        (row as HTMLElement).click();
+      }
+    });
+  });
+</script>
+
+</Layout>

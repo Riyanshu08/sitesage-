@@ -1,0 +1,455 @@
+---
+/**
+ * SiteSage — System Preferences & AI Rules Engine
+ * Route: /settings
+ * Computer vision inference thresholds, edge hardware settings, alert dispatch webhooks
+ */
+import Layout from '../layouts/Layout.astro';
+
+const detectionRules = [
+  {
+    id: 'rule-helmet',
+    name: 'Hard Hat / Helmet Detection',
+    description: 'Flag workers without ANSI Z89.1 certified head protection in active construction zones.',
+    category: 'PPE',
+    threshold: 85,
+    cooldown: 15,
+    severity: 'Critical',
+    enabled: true,
+  },
+  {
+    id: 'rule-vest',
+    name: 'High-Visibility Safety Vest',
+    description: 'Detect missing Class 2 or Class 3 fluorescent vests with retroreflective striping.',
+    category: 'PPE',
+    threshold: 80,
+    cooldown: 20,
+    severity: 'High',
+    enabled: true,
+  },
+  {
+    id: 'rule-geofence',
+    name: 'Restricted Geofence Breach',
+    description: 'Trigger immediate alerts when unauthorized personnel enter heavy machinery or crane radius.',
+    category: 'Zoning',
+    threshold: 92,
+    cooldown: 5,
+    severity: 'Critical',
+    enabled: true,
+  },
+  {
+    id: 'rule-proximity',
+    name: 'Heavy Equipment Proximity Warning',
+    description: 'Flag workers positioned within the 3.5-meter blindspot bubble of excavators and loaders.',
+    category: 'Safety',
+    threshold: 75,
+    cooldown: 10,
+    severity: 'High',
+    enabled: true,
+  },
+  {
+    id: 'rule-harness',
+    name: 'Fall Protection Tether & Harness',
+    description: 'Verify 100% tie-off compliance on leading edges, elevated decks, and scaffolding over 6 feet.',
+    category: 'PPE',
+    threshold: 88,
+    cooldown: 15,
+    severity: 'Critical',
+    enabled: true,
+  },
+  {
+    id: 'rule-eyewear',
+    name: 'Eye & Face Shield Protection',
+    description: 'Identify workers grinding, cutting, or welding without ANSI Z87.1 certified eyewear.',
+    category: 'PPE',
+    threshold: 78,
+    cooldown: 30,
+    severity: 'Medium',
+    enabled: false,
+  }
+];
+
+const dispatchChannels = [
+  { id: 'ch-ws', name: 'Browser WebSocket Push', desc: 'Instant 0-latency sound & notification in command center', active: true },
+  { id: 'ch-sms', name: 'Emergency SMS Dispatch (Twilio)', desc: 'Broadcast critical severity breaches to safety superintendents', active: true },
+  { id: 'ch-radio', name: 'Motorola MOTOTRBO Radio TTS', desc: 'Synthesized voice warning directly on foreman walkie-talkie channel 4', active: true },
+  { id: 'ch-siren', name: 'Physical Edge Siren / Strobe', desc: 'Trigger GPIO relay on Crane #2 audio-visual strobe light', active: false },
+  { id: 'ch-slack', name: 'Slack / Microsoft Teams Webhook', desc: 'Post forensic cards and snapshot thumbnails into #site-safety', active: true },
+  { id: 'ch-osha', name: 'OSHA Near-Miss Event Logger', desc: 'Cryptographically timestamp infraction in tamper-proof audit chain', active: true }
+];
+---
+
+<Layout
+  title="Settings"
+  breadcrumb={['Site Dashboard', 'Settings & AI Engine']}
+  activePage="settings"
+>
+
+<!-- TOP BANNER -->
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Settings & AI Rules Engine</h1>
+    <p class="page-subtitle">Confidence thresholds, edge inference pipelines, dispatch webhooks & hardware telemetry</p>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-ghost btn-sm" id="btn-test-alert">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+      </svg>
+      Test Alert Dispatch
+    </button>
+    <button class="btn btn-primary btn-sm" id="btn-save-settings">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+      </svg>
+      Save Configuration
+    </button>
+  </div>
+</div>
+
+<!-- SETTINGS CONTAINER (TABS + PANELS) -->
+<div style="display:grid;grid-template-columns:220px 1fr;gap:20px;align-items:start;">
+  
+  <!-- LEFT TAB NAV -->
+  <div class="card" style="padding:8px;display:flex;flex-direction:column;gap:4px;">
+    <button class="settings-nav-btn active" data-tab="tab-rules">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+      Detection Rules
+    </button>
+    <button class="settings-nav-btn" data-tab="tab-inference">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+      </svg>
+      Inference & Hardware
+    </button>
+    <button class="settings-nav-btn" data-tab="tab-dispatch">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      Alert Dispatch Webhooks
+    </button>
+    <button class="settings-nav-btn" data-tab="tab-users">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      Roles & Personnel
+    </button>
+    <button class="settings-nav-btn" data-tab="tab-audit">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      System Audit Log
+    </button>
+  </div>
+
+  <!-- RIGHT PANELS -->
+  <div>
+    
+    <!-- TAB 1: DETECTION RULES -->
+    <div id="tab-rules" class="settings-panel active">
+      <div class="card" style="padding:20px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div>
+            <h2 style="font-size:14px;font-weight:700;color:var(--color-text-primary);margin:0;">Computer Vision Inference Thresholds</h2>
+            <p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0 0;">Calibrate neural network confidence cutoffs to balance sensitivity against false alarms</p>
+          </div>
+          <span class="badge badge-primary" style="font-size:10px;">YOLOv8x-PPE Engine</span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          {detectionRules.map(rule => (
+            <div style="padding:14px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:rgba(255,255,255,0.01);display:flex;flex-direction:column;gap:12px;">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                <div>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:13px;font-weight:600;color:var(--color-text-primary);">{rule.name}</span>
+                    <span class={`badge ${rule.severity === 'Critical' ? 'badge-critical' : rule.severity === 'High' ? 'badge-warning' : 'badge-primary'}`} style="font-size:9px;">
+                      {rule.severity}
+                    </span>
+                  </div>
+                  <p style="font-size:11px;color:var(--color-text-secondary);margin:4px 0 0 0;line-height:1.4;">
+                    {rule.description}
+                  </p>
+                </div>
+                
+                <!-- Toggle switch -->
+                <div class="toggle-switch" role="switch" aria-checked={String(rule.enabled)} tabindex="0">
+                  <div class="toggle-thumb" style={rule.enabled ? 'right:2px;' : 'left:2px;'}></div>
+                </div>
+              </div>
+
+              <!-- Slider row -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;background:rgba(0,0,0,0.2);padding:10px 14px;border-radius:var(--radius-sm);">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:4px;">
+                    <span style="color:var(--color-text-tertiary);text-transform:uppercase;">Confidence Threshold</span>
+                    <span style="font-family:var(--font-mono);font-weight:700;color:var(--color-primary);">{rule.threshold}%</span>
+                  </div>
+                  <input type="range" min="50" max="98" value={rule.threshold} class="slider-control" aria-label={`Confidence threshold for ${rule.name}`} />
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:4px;">
+                    <span style="color:var(--color-text-tertiary);text-transform:uppercase;">Alert Cooldown Debounce</span>
+                    <span style="font-family:var(--font-mono);font-weight:700;color:var(--color-safe);">{rule.cooldown} seconds</span>
+                  </div>
+                  <input type="range" min="2" max="60" value={rule.cooldown} class="slider-control" aria-label={`Alert cooldown for ${rule.name}`} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: INFERENCE & HARDWARE -->
+    <div id="tab-inference" class="settings-panel" style="display:none;">
+      <div class="card" style="padding:20px;margin-bottom:16px;">
+        <h2 style="font-size:14px;font-weight:700;color:var(--color-text-primary);margin:0 0 16px 0;">Edge Inference & GPU Cluster</h2>
+        
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div style="padding:14px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:rgba(255,255,255,0.01);">
+            <div style="font-size:10px;color:var(--color-text-tertiary);text-transform:uppercase;">Inference Accelerator</div>
+            <div style="font-size:14px;font-weight:700;color:var(--color-text-primary);margin-top:2px;">NVIDIA RTX A5000 Edge Node</div>
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:11px;">
+              <div style="display:flex;justify-content:space-between;">
+                <span>VRAM Allocation</span>
+                <span style="font-family:var(--font-mono);color:var(--color-safe);">18.2 / 24.0 GB (75%)</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span>Tensor Core Utilization</span>
+                <span style="font-family:var(--font-mono);color:var(--color-primary);">68%</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span>Operating Temperature</span>
+                <span style="font-family:var(--font-mono);color:var(--color-safe);">58°C (Nominal)</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding:14px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:rgba(255,255,255,0.01);">
+            <div style="font-size:10px;color:var(--color-text-tertiary);text-transform:uppercase;">Active Neural Weights</div>
+            <div style="font-size:14px;font-weight:700;color:var(--color-text-primary);margin-top:2px;">YOLOv8x-PPE-Custom v2.4</div>
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:11px;">
+              <div style="display:flex;justify-content:space-between;">
+                <span>Precision Mode</span>
+                <span style="font-family:var(--font-mono);color:var(--color-text-secondary);">TensorRT INT8 Quantized</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span>Mean Inference Latency</span>
+                <span style="font-family:var(--font-mono);color:var(--color-safe);">12.4 ms / frame</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span>NMS IoU Threshold</span>
+                <span style="font-family:var(--font-mono);color:var(--color-text-secondary);">0.45</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:8px;">
+          <button class="btn btn-secondary btn-sm" id="btn-recompile-trt">Recompile TensorRT Engine</button>
+          <button class="btn btn-ghost btn-sm" id="btn-benchmark">Run Benchmark (1000 frames)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: ALERT DISPATCH -->
+    <div id="tab-dispatch" class="settings-panel" style="display:none;">
+      <div class="card" style="padding:20px;margin-bottom:16px;">
+        <h2 style="font-size:14px;font-weight:700;color:var(--color-text-primary);margin:0 0 6px 0;">Alert Notification & Dispatch Webhooks</h2>
+        <p style="font-size:11px;color:var(--color-text-tertiary);margin:0 0 16px 0;">Automated multi-channel broadcast for hazardous safety incidents</p>
+
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          {dispatchChannels.map(ch => (
+            <div style="padding:12px 14px;border:1px solid var(--color-border);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.01);">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--color-text-primary);">{ch.name}</div>
+                <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:2px;">{ch.desc}</div>
+              </div>
+              <div class="toggle-switch" role="switch" aria-checked={String(ch.active)} tabindex="0">
+                <div class="toggle-thumb" style={ch.active ? 'right:2px;' : 'left:2px;'}></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: USERS & ROLES -->
+    <div id="tab-users" class="settings-panel" style="display:none;">
+      <div class="card" style="padding:20px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div>
+            <h2 style="font-size:14px;font-weight:700;color:var(--color-text-primary);margin:0;">Site Safety Personnel & Access Roles</h2>
+            <p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0 0;">Authorized operators with sign-off clearance</p>
+          </div>
+          <button class="btn btn-primary btn-sm">+ Invite Personnel</button>
+        </div>
+
+        <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:left;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--color-border);">
+              <th style="padding:8px 12px;color:var(--color-text-tertiary);font-size:10px;text-transform:uppercase;">Name</th>
+              <th style="padding:8px 12px;color:var(--color-text-tertiary);font-size:10px;text-transform:uppercase;">Role</th>
+              <th style="padding:8px 12px;color:var(--color-text-tertiary);font-size:10px;text-transform:uppercase;">Sign-off Clearance</th>
+              <th style="padding:8px 12px;color:var(--color-text-tertiary);font-size:10px;text-transform:uppercase;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              { name: 'S. Chen, CSP', email: 's.chen@sitesage.ai', role: 'Head Safety Officer', clearance: 'Level 4 (All Sectors)', status: 'Active Now' },
+              { name: 'D. Vance, PE', email: 'd.vance@sitesage.ai', role: 'Site Superintendent', clearance: 'Level 3 (Operational)', status: 'Active' },
+              { name: 'M. Kowalski', email: 'm.kowalski@steelcorp.com', role: 'SteelCorp Foreman', clearance: 'Level 2 (Sector B Only)', status: 'Active' },
+              { name: 'E. Rostova', email: 'e.rostova@audits.gov', role: 'OSHA External Auditor', clearance: 'Level 1 (Read-Only)', status: 'Invited' },
+            ].map(u => (
+              <tr style="border-bottom:1px solid var(--color-border);">
+                <td style="padding:10px 12px;">
+                  <div style="font-weight:600;color:var(--color-text-primary);">{u.name}</div>
+                  <div style="font-size:10px;color:var(--color-text-tertiary);">{u.email}</div>
+                </td>
+                <td style="padding:10px 12px;color:var(--color-text-secondary);">{u.role}</td>
+                <td style="padding:10px 12px;font-family:var(--font-mono);font-size:11px;">{u.clearance}</td>
+                <td style="padding:10px 12px;">
+                  <span class={`badge ${u.status.includes('Active') ? 'badge-safe' : 'badge-neutral'}`} style="font-size:9px;">
+                    {u.status}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 5: AUDIT LOG -->
+    <div id="tab-audit" class="settings-panel" style="display:none;">
+      <div class="card" style="padding:20px;margin-bottom:16px;">
+        <h2 style="font-size:14px;font-weight:700;color:var(--color-text-primary);margin:0 0 12px 0;">System Security & Changes Audit Log</h2>
+        <div style="display:flex;flex-direction:column;gap:8px;font-family:var(--font-mono);font-size:11px;">
+          {[
+            { ts: '2026-09-29 13:42:01', user: 'S. Chen', action: 'Modified Geofence Zone: Crane #2 Radius expanded by 2.0m' },
+            { ts: '2026-09-29 11:15:22', user: 'System-Auto', action: 'Synchronized RTSP feeds for 27 cameras (All nodes nominal)' },
+            { ts: '2026-09-28 17:30:45', user: 'D. Vance', action: 'Generated OSHA Weekly Compliance Dossier (SHA-256 verified)' },
+            { ts: '2026-09-28 09:02:11', user: 'S. Chen', action: 'Adjusted Hard Hat confidence threshold from 80% to 85%' },
+          ].map(log => (
+            <div style="padding:8px 12px;background:rgba(0,0,0,0.25);border:1px solid var(--color-border);border-radius:var(--radius-sm);display:flex;gap:12px;">
+              <span style="color:var(--color-text-tertiary);">{log.ts}</span>
+              <span style="color:var(--color-primary);font-weight:600;">[{log.user}]</span>
+              <span style="color:var(--color-text-secondary);">{log.action}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<style>
+.settings-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+.settings-nav-btn:hover {
+  background: rgba(255,255,255,0.04);
+  color: var(--color-text-primary);
+}
+.settings-nav-btn.active {
+  background: rgba(37,99,235,0.18);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+.toggle-switch {
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--color-safe);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.toggle-switch[aria-checked="false"] {
+  background: var(--color-border);
+}
+.toggle-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  position: absolute;
+  top: 2px;
+  transition: all 0.2s;
+}
+.slider-control {
+  width: 100%;
+  height: 4px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+</style>
+
+<script>
+  // Tab switching
+  const navBtns = document.querySelectorAll('.settings-nav-btn');
+  const panels = document.querySelectorAll<HTMLElement>('.settings-panel');
+
+  navBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      navBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const tabId = btn.getAttribute('data-tab');
+
+      panels.forEach(panel => {
+        panel.style.display = panel.id === tabId ? 'block' : 'none';
+      });
+    });
+  });
+
+  // Toggle Switches
+  document.querySelectorAll('.toggle-switch').forEach(sw => {
+    sw.addEventListener('click', () => {
+      const isChecked = sw.getAttribute('aria-checked') === 'true';
+      sw.setAttribute('aria-checked', String(!isChecked));
+      const thumb = sw.querySelector('.toggle-thumb') as HTMLElement;
+      if (thumb) {
+        thumb.style.right = !isChecked ? '2px' : '';
+        thumb.style.left = !isChecked ? '' : '2px';
+      }
+    });
+  });
+
+  // Test Alert & Save actions
+  document.getElementById('btn-test-alert')?.addEventListener('click', () => {
+    alert('Dispatched test payload to WebSocket, Twilio SMS, and Motorola Radio TTS. All endpoints acknowledged 200 OK.');
+  });
+
+  document.getElementById('btn-save-settings')?.addEventListener('click', () => {
+    alert('System settings and AI confidence thresholds saved to edge storage.');
+  });
+
+  document.getElementById('btn-recompile-trt')?.addEventListener('click', () => {
+    alert('TensorRT optimization engine invoked. Compiling fp16/int8 kernels for RTX A5000...');
+  });
+
+  document.getElementById('btn-benchmark')?.addEventListener('click', () => {
+    alert('Benchmark completed: 1,000 synthetic 4K frames processed in 23.4s (42.7 FPS average). Zero frame drops.');
+  });
+</script>
+
+</Layout>

@@ -1,0 +1,187 @@
+/**
+ * SiteSage Motion System
+ * All animation definitions. Import after tokens.css.
+ * Respects prefers-reduced-motion throughout.
+ */
+
+/* ──────────────────────────────────────
+   KEYFRAMES
+────────────────────────────────────── */
+
+/* Safety pulse — critical border indicator */
+@keyframes pulse-critical {
+  0%, 100% { box-shadow: 0 0 0 1px var(--color-critical-dark), 0 0 8px var(--color-critical-glow); }
+  50%       { box-shadow: 0 0 0 1px var(--color-critical-dark), 0 0 20px rgba(239,68,68,0.4); }
+}
+
+/* Operational blink — live status dots */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+/* Navigation — drawer and panel entrances */
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes slide-in-top {
+  from { transform: translateY(-12px); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+@keyframes slide-in-left {
+  from { transform: translateX(-8px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+/* Data — alert card arrival */
+@keyframes alert-enter {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Radar sweep */
+@keyframes radar-sweep {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Radar blip */
+@keyframes blip-pulse {
+  0%, 100% { opacity: 0.4; r: 3; }
+  50%       { opacity: 1;   r: 5; }
+}
+
+/* Scanning line — simulated video feed */
+@keyframes scan-line {
+  0%   { top: -4px; opacity: 0; }
+  5%   { opacity: 0.6; }
+  95%  { opacity: 0.3; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* Fade in */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Scale in */
+@keyframes scale-in {
+  from { transform: scale(0.96); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+/* Progress fill */
+@keyframes fill-progress {
+  from { width: 0%; }
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+
+/* Detection overlay appear */
+@keyframes bbox-appear {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ──────────────────────────────────────
+   MOTION UTILITY CLASSES
+────────────────────────────────────── */
+
+.animate-alert-enter {
+  animation: alert-enter var(--duration-normal) var(--ease-out);
+}
+
+.animate-fade-in {
+  animation: fade-in var(--duration-normal) var(--ease-out);
+}
+
+.animate-scale-in {
+  animation: scale-in var(--duration-normal) var(--ease-out);
+}
+
+.animate-slide-right {
+  animation: slide-in-right var(--duration-drawer) var(--ease-out);
+}
+
+.animate-blink {
+  animation: blink 1.4s ease-in-out infinite;
+}
+
+.animate-pulse-critical {
+  animation: pulse-critical 2.4s ease-in-out infinite;
+}
+
+.radar-sweep-arm {
+  transform-origin: center;
+  animation: radar-sweep 4s linear infinite;
+}
+
+.scan-line {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--color-cyan) 50%, transparent 100%);
+  animation: scan-line 5s linear infinite;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ──────────────────────────────────────
+   SKELETON LOADING
+────────────────────────────────────── */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-2) 25%,
+    var(--color-surface-3) 50%,
+    var(--color-surface-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ──────────────────────────────────────
+   REDUCED MOTION
+────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Keep critical state communication even with reduced motion */
+  .animate-pulse-critical {
+    box-shadow: var(--shadow-critical);
+    animation: none;
+  }
+
+  .animate-blink {
+    animation: none;
+    opacity: 1;
+  }
+
+  .radar-sweep-arm {
+    animation: none;
+  }
+}
